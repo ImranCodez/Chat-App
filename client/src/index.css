@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+omg {
+  /* ================= Base ================= */
+  --color-bg: #07110d;
+  /* Main app background */
+
+  --color-surface: #0d1712;
+  /* Cards, sidebars, chat panels */
+
+  --color-muted: #122019;
+  /* Hover states, secondary surfaces */
+
+  --color-surface-hover: #172820;
+  /* Interactive hover */
+
+  --color-elevated: #1c3026;
+  /* Dropdowns, modals */
+
+  /* ================= Text ================= */
+  --color-text-primary: #f0fdf4;
+  /* Main text */
+
+  --color-text-secondary: #a7b8ae;
+  /* Secondary text */
+
+  --color-coil: #d7f9e2;
+  /* Logo / emphasized text */
+
+  --color-text-muted: #6f8177;
+  /* Placeholders, hints */
+
+  /* ================= Borders ================= */
+  --color-border: #1b3025;
+  /* Standard borders */
+
+  --color-border-hover: #2a4737;
+  /* Hover border */
+
+  /* ================= Brand ================= */
+  --color-brand: #16a34a;
+  /* Primary Green */
+
+  --color-brand-light: #22c55e;
+  /* Hover Green */
+
+  --color-brand-dark: #15803d;
+  /* Active / pressed Green */
+
+  --color-accent: #4ade80;
+  /* Bright Mint Green */
+
+  --color-accent-soft: #0d2b1a;
+  /* Accent background */
+
+  --color-accent-glow: #86efac;
+  /* Glow effects */
+
+  /* ================= Chat ================= */
+  --color-chat-sent: #15803d;
+  /* Your messages */
+
+  --color-chat-sent-hover: #16a34a;
+  /* Your message hover */
+
+  --color-chat-received: #14231b;
+  /* Other messages */
+
+  --color-chat-received-hover: #1b3024;
+  /* Other message hover */
+
+  /* ================= Status ================= */
+  --color-success: #22c55e;
+  /* Success */
+
+  --color-warning: #f59e0b;
+  /* Warning */
+
+  --color-error: #ef4444;
+  /* Error */
+
+  --color-info: #38bdf8;
+  /* Information */
+
+  /* ================= Presence ================= */
+  --color-online: #22c55e;
+  /* Online */
+
+  --color-offline: #6b7280;
+  /* Offline */
+}
