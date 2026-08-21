@@ -1,13 +1,16 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Home from "./pages/Home";
-import Login from "./pages/login";
+import Login from "./pages/Login";
 import Signup from "./pages/Singup";
 import Layout from "./components";
 
 function App() {
   return (
+    <>
     <BrowserRouter>
       <Routes>
 
@@ -22,6 +25,10 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+
+    <ToastContainer/>
+    
+    </>
   );
 }
 

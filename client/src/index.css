@@ -1,91 +1,272 @@
 @import "tailwindcss";
 
-omg {
+@theme {
   /* ================= Base ================= */
-  --color-bg: #07110d;
-  /* Main app background */
+  --color-bg: #070a10;
+  /* Deep obsidian background */
 
-  --color-surface: #0d1712;
-  /* Cards, sidebars, chat panels */
+  --color-surface: #0d121b;
+  /* Sidebars, chat panels, cards */
 
-  --color-muted: #122019;
-  /* Hover states, secondary surfaces */
+  --color-muted: #131a26;
+  /* Secondary surfaces */
 
-  --color-surface-hover: #172820;
+  --color-surface-hover: #1a2332;
   /* Interactive hover */
 
-  --color-elevated: #1c3026;
-  /* Dropdowns, modals */
+  --color-elevated: #202b3d;
+  /* Dropdowns, modals, popovers */
 
   /* ================= Text ================= */
-  --color-text-primary: #f0fdf4;
+  --color-text-primary: #f3f6fa;
   /* Main text */
 
-  --color-text-secondary: #a7b8ae;
+  --color-text-secondary: #a9b4c3;
   /* Secondary text */
 
-  --color-coil: #d7f9e2;
+  --color-coil: #d9e8ff;
   /* Logo / emphasized text */
 
-  --color-text-muted: #6f8177;
+  --color-text-muted: #687486;
   /* Placeholders, hints */
 
   /* ================= Borders ================= */
-  --color-border: #1b3025;
+  --color-border: #202a39;
   /* Standard borders */
 
-  --color-border-hover: #2a4737;
+  --color-border-hover: #334155;
   /* Hover border */
 
   /* ================= Brand ================= */
-  --color-brand: #16a34a;
-  /* Primary Green */
+  --color-brand: #3157d5;
+  /* Sapphire blue */
 
-  --color-brand-light: #22c55e;
-  /* Hover Green */
+  --color-brand-light: #456ef0;
+  /* Hover sapphire */
 
-  --color-brand-dark: #15803d;
-  /* Active / pressed Green */
+  --color-brand-dark: #263fa3;
+  /* Active sapphire */
 
-  --color-accent: #4ade80;
-  /* Bright Mint Green */
+  --color-accent: #7dd3fc;
+  /* Ice blue */
 
-  --color-accent-soft: #0d2b1a;
-  /* Accent background */
+  --color-accent-soft: #102638;
+  /* Soft ice-blue background */
 
-  --color-accent-glow: #86efac;
+  --color-accent-glow: #bae6fd;
   /* Glow effects */
 
   /* ================= Chat ================= */
-  --color-chat-sent: #15803d;
+  --color-chat-sent: #3157d5;
   /* Your messages */
 
-  --color-chat-sent-hover: #16a34a;
+  --color-chat-sent-hover: #456ef0;
   /* Your message hover */
 
-  --color-chat-received: #14231b;
+  --color-chat-received: #151d29;
   /* Other messages */
 
-  --color-chat-received-hover: #1b3024;
+  --color-chat-received-hover: #1d2736;
   /* Other message hover */
 
   /* ================= Status ================= */
-  --color-success: #22c55e;
+  --color-success: #34d399;
   /* Success */
 
-  --color-warning: #f59e0b;
+  --color-warning: #fbbf24;
   /* Warning */
 
-  --color-error: #ef4444;
+  --color-error: #f87171;
   /* Error */
 
   --color-info: #38bdf8;
   /* Information */
 
   /* ================= Presence ================= */
-  --color-online: #22c55e;
+  --color-online: #34d399;
   /* Online */
 
-  --color-offline: #6b7280;
+  --color-away: #fbbf24;
+  /* Away */
+
+  --color-offline: #64748b;
   /* Offline */
 }
+
+@layer base {
+  :root {
+    font-family: "DM Sans", "Segoe UI", sans-serif;
+    color: var(--color-text-primary);
+    background: var(--color-bg);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-bg);
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  ::selection {
+    color: var(--color-bg);
+    background: var(--color-accent);
+  }
+}
+
+.ambient-canvas {
+  background:
+    radial-gradient(circle at 12% 18%, rgb(49 87 213 / 0.16), transparent 28%),
+    radial-gradient(
+      circle at 88% 82%,
+      rgb(125 211 252 / 0.08),
+      transparent 24%
+    ),
+    var(--color-bg);
+  isolation: isolate;
+}
+
+.ambient-canvas::before {
+  position: absolute;
+  inset: -40%;
+  z-index: -1;
+  background: conic-gradient(
+    from 90deg at 50% 50%,
+    transparent,
+    rgb(49 87 213 / 0.09),
+    transparent 30%
+  );
+  content: "";
+  animation: ambient-drift 22s linear infinite;
+}
+
+.ambient-grid {
+  background-image:
+    linear-gradient(rgb(125 211 252 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(125 211 252 / 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.float-slow {
+  animation: float-slow 10s ease-in-out infinite;
+}
+
+.float-delayed {
+  animation: float-slow 12s 2s ease-in-out infinite reverse;
+}
+
+.form-enter {
+  animation: form-enter 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.chat-enter {
+  animation: chat-enter 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.message-enter {
+  animation: message-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.welcome-orbit {
+  transform-origin: center;
+  animation: welcome-orbit 18s linear infinite;
+}
+
+.welcome-orbit-reverse {
+  transform-origin: center;
+  animation: welcome-orbit 24s linear infinite reverse;
+}
+
+.welcome-pulse {
+  animation: welcome-pulse 3.8s ease-in-out infinite;
+}
+
+.welcome-dash {
+  stroke-dasharray: 7 12;
+  animation: welcome-dash 7s linear infinite;
+}
+
+@keyframes ambient-drift {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -18px, 0) rotate(8deg);
+  }
+}
+
+@keyframes form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes chat-enter {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes welcome-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes welcome-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes welcome-dash {
+  to {
+    stroke-dashoffset: -76;
+  }
+}
+

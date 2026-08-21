@@ -8,8 +8,8 @@ const Layout = () => {
   // Profile এখনো load হচ্ছে
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center w-full h-screen bg-gray-200">
-        <p>Profile loading...</p>
+      <div className="flex min-h-screen items-center justify-center bg-bg text-text-secondary">
+        <p className="animate-pulse text-sm">Loading your conversations...</p>
       </div>
     );
   }
@@ -20,9 +20,11 @@ const Layout = () => {
   }
 
   return (
-    <div className="flex gap-5">
+    <div className="flex min-h-screen bg-bg">
       <SideNavbar profile={data} />
-      <Outlet />
+      <main className="min-w-0 flex-1">
+        <Outlet />
+      </main>
     </div>
   );
 };

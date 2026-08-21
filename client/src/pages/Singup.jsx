@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useSignupMutation } from "../lib/api";
 import { useNavigate } from "react-router-dom";
 const Signup = () => {
-  const nvaigator =useNavigate()
+  const nvaigator = useNavigate();
   const [signupdata, setsignupdata] = useState({
     fullname: "",
     email: "",
@@ -61,7 +61,7 @@ const Signup = () => {
         email: "",
         password: "",
       });
-      nvaigator("/login")
+      nvaigator("/login");
       // =========================================
       // পুরোনো error message-ও clear করে দিবে
       // =========================================
@@ -70,7 +70,6 @@ const Signup = () => {
         email: "",
         password: "",
       });
-
     } catch (error) {
       // Backend থেকে error এলে এখানে আসবে
       console.log(error);
@@ -78,16 +77,48 @@ const Signup = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen w-full">
-      <div className="dark">
-        <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-md p-6">
-
-          <h2 className="text-2xl font-bold text-gray-200 mb-4">
-            Sign Up
+    <div className="ambient-canvas relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-bg px-5 py-10">
+      <div className="ambient-grid pointer-events-none absolute inset-0" />
+      <svg
+        className="pointer-events-none absolute -right-24 bottom-8 h-80 w-80 text-accent/20 float-delayed"
+        viewBox="0 0 320 320"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="160"
+          cy="160"
+          r="116"
+          stroke="currentColor"
+          strokeWidth="1"
+          strokeDasharray="5 12"
+        />
+        <path
+          d="M20 218C76 152 126 250 184 172S270 96 304 120"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+      </svg>
+      <div className="pointer-events-none absolute -left-10 top-20 h-20 w-20 rounded-2xl border border-brand/20 bg-brand/5 float-slow" />
+      <div className="w-full max-w-md">
+        <div className="mb-8 flex items-center justify-center gap-3 text-2xl font-bold tracking-tight text-coil">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-brand/20">
+            C
+          </span>
+          ChatApp
+        </div>
+        <div className="form-enter rounded-2xl border border-border bg-surface/95 p-6 shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-8">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.16em] text-accent">
+            Get started
+          </p>
+          <h2 className="text-2xl font-bold text-text-primary">
+            Create your account
           </h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            Join the conversation in a few seconds.
+          </p>
 
-          <form onSubmit={signuphnadle} className="flex flex-col">
-
+          <form onSubmit={signuphnadle} className="mt-7 flex flex-col">
             {/* ================= Full Name ================= */}
             <input
               value={signupdata.fullname}
@@ -105,12 +136,12 @@ const Signup = () => {
                 }));
               }}
               placeholder="Full Name"
-              className="bg-gray-700 text-gray-200 border-0 rounded-md p-2 mb-1 focus:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
+              className="mb-1 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand/20"
               type="text"
             />
 
             {Singuperror.fullname && (
-              <p className="text-red-500 text-sm font-semibold mb-3">
+              <p className="mb-3 text-sm font-semibold text-error">
                 {Singuperror.fullname}
               </p>
             )}
@@ -132,12 +163,12 @@ const Signup = () => {
                 }));
               }}
               placeholder="Email address"
-              className="bg-gray-700 text-gray-200 border-0 rounded-md p-2 mb-1 focus:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
+              className="mb-1 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand/20"
               type="email"
             />
 
             {Singuperror.email && (
-              <p className="text-red-500 text-sm font-semibold mb-3">
+              <p className="mb-3 text-sm font-semibold text-error">
                 {Singuperror.email}
               </p>
             )}
@@ -159,12 +190,12 @@ const Signup = () => {
                 }));
               }}
               placeholder="Password"
-              className="bg-gray-700 text-gray-200 border-0 rounded-md p-2 mb-1 focus:bg-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition ease-in-out duration-150"
+              className="mb-1 rounded-xl border border-border bg-muted px-4 py-3 text-sm text-text-primary outline-none transition placeholder:text-text-muted focus:border-brand focus:ring-2 focus:ring-brand/20"
               type="password"
             />
 
             {Singuperror.password && (
-              <p className="text-red-500 text-sm font-semibold mb-3">
+              <p className="mb-3 text-sm font-semibold text-error">
                 {Singuperror.password}
               </p>
             )}
@@ -172,21 +203,17 @@ const Signup = () => {
             {/* ================= Remember Me ================= */}
             <div className="flex items-center justify-between flex-wrap">
               <label
-                className="text-sm text-gray-200 cursor-pointer"
+                className="cursor-pointer text-sm text-text-secondary"
                 htmlFor="remember-me"
               >
-                <input
-                  className="mr-2"
-                  id="remember-me"
-                  type="checkbox"
-                />
+                <input className="mr-2" id="remember-me" type="checkbox" />
                 Remember me
               </label>
 
-              <p className="text-white text-sm mt-4">
+              <p className="mt-4 text-sm text-text-secondary">
                 Already have an account?{" "}
                 <a
-                  className="text-blue-500 hover:underline"
+                  className="font-semibold text-accent transition hover:text-accent-glow"
                   href="/login"
                 >
                   Login
@@ -196,12 +223,11 @@ const Signup = () => {
 
             {/* ================= Submit ================= */}
             <button
-              className="bg-blue-500 text-white font-bold py-2 px-4 rounded-md mt-4 hover:bg-indigo-600 transition ease-in-out duration-150"
+              className="mt-6 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-light focus:outline-none focus:ring-2 focus:ring-accent/40"
               type="submit"
             >
               Sign Up
             </button>
-
           </form>
         </div>
       </div>

@@ -70,7 +70,7 @@ const messageGet = async (req, res) => {
     const { conversation } = req.params;
     if (!conversation) return sendResponse(res, 400, " conversation not found");
     const message = await messaegesSchema.find({conversation});
-    sendResponse(res, 200, message);
+    sendResponse(res, 200, '',true, message);
   } catch (error) {
     sendResponse(res, 500, "Internal server error");
     console.log(error);

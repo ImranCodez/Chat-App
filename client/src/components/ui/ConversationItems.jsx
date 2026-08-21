@@ -3,32 +3,39 @@ import { activeConversation } from "../../slices/activeConvslice";
 
 const ConversationItems = ({ profile, myid }) => {
   const dispatch = useDispatch();
-console.log(profile);
 
   const activeconvhanlde = () => {
     if (profile?._id == myid) {
-      dispatch(activeConversation({...profile.participent,convId:profile._id}));
+      dispatch(
+        activeConversation({ ...profile.participent, convId: profile._id }),
+      );
     } else {
-      dispatch(activeConversation({...profile.creator,convId:profile._id}));
+      dispatch(activeConversation({ ...profile.creator, convId: profile._id }));
     }
   };
   return (
     <div
       onClick={activeconvhanlde}
-      className="group flex items-center gap-2 rounded-[7px] duration-200 hover:bg-gray-300"
+      className="group flex cursor-pointer items-center gap-3 rounded-xl border border-transparent px-2 py-3 transition hover:border-border hover:bg-muted"
     >
-      <div className="border mb-5 mt-2 ml-2 w-10 h-10 border-slate-800 rounded-full flex items-center justify-center bg-slate-600 text-white">
-        I
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand/30 bg-accent-soft font-bold text-accent">
+        {(
+          (profile?._id == myid
+            ? profile?.creator?.fullname
+            : profile?.participent?.fullname) || "U"
+        )
+          .charAt(0)
+          .toUpperCase()}
       </div>
 
-      <div>
-        <h1 className="text-[17px] font-semibold text-black">
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-sm font-semibold text-text-primary">
           {profile?._id == myid
             ? profile?.creator?.fullname
             : profile?.participent?.fullname}
         </h1>
 
-        <p className="text-white group-hover:text-black duration-200">
+        <p className="mt-1 truncate text-xs text-text-muted transition group-hover:text-text-secondary">
           {profile.lastMessage || "Hi everyone"}
         </p>
       </div>
