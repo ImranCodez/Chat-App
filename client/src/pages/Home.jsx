@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiMessageCircle,
   FiMoreVertical,
@@ -7,19 +7,41 @@ import {
 } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { useLazyGetMessagesQuery } from "../lib/api";
+import { useGetprofileQuery, useSendMessageMutation } from "../lib/api";
+import { toast } from "react-toastify";
 
 const Home = () => {
+  const [messageText, setMessageText] = useState("");
+
+  // .......redux...data ..
   const perticipentdata = useSelector((state) => state.activeconv.active);
-
-  const [triggermessage, { data = [], isLoading, error }] =
-    useLazyGetMessagesQuery();
-  
-
+  // ....backend data feting....
+  const [triggermessage, { data = [], isLoading, error }] = useLazyGetMessagesQuery();
+  const { data: profileResponse } = useGetprofileQuery();
+  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  const currentUserId = profileResponse?.data?._id;
   useEffect(() => {
     if (perticipentdata?.convId) {
       triggermessage(perticipentdata?.convId);
     }
   }, [perticipentdata]);
+
+  const submitMessage = async (event) => {
+    event.preventDefault();
+    const content = messageText.trim();
+    if (!content || !perticipentdata?.convId || isSending) return;
+    try {
+      await sendMessage({
+        content,
+        conversation: perticipentdata.convId,
+        contentype: "text",
+      }).unwrap();
+      setMessageText("");
+      triggermessage(perticipentdata.convId);
+    } catch (sendError) {
+      toast.error(sendError?.data?.message || "Message could not be sent");
+    }
+  };
 
   if (!perticipentdata) {
     return (
@@ -114,19 +136,30 @@ const Home = () => {
         className="relative flex flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
         id="chatDisplay"
       >
-        {data?.data?.map((items) => (
-          <div
-            key={items._id || items.content}
-            className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
-          >
-            {items.content}
-          </div>
-        ))}
-        <div className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]">
-          Hello! I need a Chatbot!
-        </div>
+        {isLoading && <p className="m-auto text-sm text-text-muted">Loading messages...</p>}
+        {error && <p className="m-auto text-sm text-error">Could not load messages.</p>}
+        {!isLoading && !error && !data?.data?.length && (
+          <p className="m-auto text-sm text-text-muted">No messages yet. Say hello.</p>
+        )}
+        {data?.data?.map((items) => {
+          return items?.sender?._id == perticipentdata?._id ? (
+            <div
+              key={items._id || items.content}
+              className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
+            >
+              {items.content}
+            </div>
+          ) : (
+            <div
+              key={items._id || items.content}
+              className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
+            >
+              {items.content}
+            </div>
+          );
+        })}
       </div>
-      <div className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6">
+      <form onSubmit={submitMessage} className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6">
         <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-1.5 focus-within:border-brand/70">
           <button
             type="button"
@@ -136,20 +169,24 @@ const Home = () => {
             <FiPaperclip size={18} />
           </button>
           <input
+            value={messageText}
+            onChange={(event) => setMessageText(event.target.value)}
             placeholder="Type your message..."
             className="min-w-0 flex-1 bg-transparent px-2 text-sm text-text-primary outline-none placeholder:text-text-muted"
             id="chatInput"
             type="text"
           />
           <button
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white transition hover:bg-brand-light"
+            type="submit"
+            disabled={isSending || !messageText.trim()}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-50"
             id="sendButton"
             aria-label="Send message"
           >
             <FiSend size={17} />
           </button>
         </div>
-      </div>
+      </form>
     </section>
   );
 };

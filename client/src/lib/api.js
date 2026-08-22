@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "http://localhost:8000",
-    credentials:"include"
+    credentials: "include",
   }),
 
   endpoints: (build) => ({
@@ -27,10 +27,34 @@ export const apiSlice = createApi({
     getConversation: build.query({
       query: () => "/conv/list",
     }),
-      getMessages: build.query({
-      query: (convId) =>`/conv/messageslist/${convId}`,
+    addFriend: build.mutation({
+      query: (email) => ({
+        url: "/conv/addfriend",
+        method: "POST",
+        body:email ,
+      }),
+      invalidatesTags: ["Conversations"],
+    }),
+    sendMessage: build.mutation({
+      query: (message) => ({
+        url: "/conv/sendmessage",
+        method: "POST",
+        body: message,
+      }),
+    }),
+    getMessages: build.query({
+      query: (convId) => `/conv/messageslist/${convId}`,
     }),
   }),
+  tagTypes: ["Conversations"],
 });
 
-export const { useGetConversationQuery,useLogginMutation,useSignupMutation,useGetprofileQuery,useLazyGetMessagesQuery } = apiSlice;
+export const {
+  useGetConversationQuery,
+  useLogginMutation,
+  useSignupMutation,
+  useGetprofileQuery,
+  useLazyGetMessagesQuery,
+  useAddFriendMutation,
+  useSendMessageMutation,
+} = apiSlice;
