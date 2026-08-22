@@ -39,19 +39,17 @@ const Login = () => {
     try {
       const res = await loginuser(longindata).unwrap();
 
-      console.log("Login response:", res);
-
       toast.success("Login successful!", {
         autoClose: 3000,
       });
 
+      setTimeout(() => {
+        navigator("/");
+      }, 4000);
       setlogindata({
         email: "",
         password: "",
       });
-      setTimeout(() => {
-        return navigator("/");
-      }, 4000);
     } catch (error) {
       console.log("Login error:", error);
 

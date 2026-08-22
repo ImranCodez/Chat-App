@@ -3,6 +3,7 @@ import { activeConversation } from "../../slices/activeConvslice";
 
 const ConversationItems = ({ profile, myid }) => {
   const dispatch = useDispatch();
+   console.log(profile)
   const isCreator = profile?.creator?._id === myid;
   const contact = isCreator ? profile?.participent : profile?.creator;
 

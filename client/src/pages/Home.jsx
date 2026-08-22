@@ -19,6 +19,7 @@ const Home = () => {
   const [triggermessage, { data = [], isLoading, error }] = useLazyGetMessagesQuery();
   const { data: profileResponse } = useGetprofileQuery();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  console.log(data?.data)
   const currentUserId = profileResponse?.data?._id;
   useEffect(() => {
     if (perticipentdata?.convId) {

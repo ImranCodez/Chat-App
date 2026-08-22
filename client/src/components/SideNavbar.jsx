@@ -31,9 +31,9 @@ const SideNavbar = ({ profile }) => {
         return setEmaierro("Enter your friend's email");
       }
       // Backend receives { email: "friend@gmail.com" }
-     const res= await addFriend(frdemail).unwrap();
-       cosnole.log(res)
-    
+      const res = await addFriend(frdemail).unwrap();
+      console.log(res);
+
       toast.success("Contact added");
 
       // Reset email object
@@ -43,8 +43,6 @@ const SideNavbar = ({ profile }) => {
 
       setIsAddingFriend(false);
     } catch (error) {
-      console.log(error?.data?.message);
-
       toast.error(error?.data?.message || "Could not add contact");
     }
   };
@@ -104,12 +102,7 @@ const SideNavbar = ({ profile }) => {
               value={frdemail.email}
               onChange={(event) => {
                 // Update email property inside object
-                setEmail((prev) => ({
-                  ...prev,
-                  email: event.target.value,
-                }));
-
-                // Remove error when user starts typing
+                setEmail((prev) => ({...prev, email: event.target.value,}));// Remove error when user starts typing
                 setEmaierro("");
               }}
               placeholder="Find your friend.."
@@ -148,7 +141,7 @@ const SideNavbar = ({ profile }) => {
             <ConversationItems
               key={items._id}
               profile={items}
-              myid={profile?._id}
+              myid={profile?.data?._id}
             />
           ))}
         </div>
