@@ -70,8 +70,8 @@ const getprofile = async (req, res) => {
   try {
     const user = await userAuthSchema
       .findById(req.user.id)
-      .select("-otp -updatedAt -otpExpires");
-    if (!user) return sendResponse(res, 400, "Inavlid oigfgfgoiooon request");
+      .select("-otp -updatedAt -otpExpires -password");
+    if (!user) return sendResponse(res, 400, "Inavlid  request");
 
     sendResponse(res, 200, "", true, user);
   } catch (error) {

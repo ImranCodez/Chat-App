@@ -7,6 +7,7 @@ import { FiMessageCircle, FiPlus, FiX, FiLogOut } from "react-icons/fi";
 
 const SideNavbar = ({ profile }) => {
   const { data, isFetching } = useGetConversationQuery();
+console.log(profile?.data);
 
   const [isAddingFriend, setIsAddingFriend] = useState(false);
 
@@ -150,7 +151,7 @@ const SideNavbar = ({ profile }) => {
       {/* Current User */}
       <div className="mt-5 border-t border-border pt-4">
         <div className="mb-3 flex items-center gap-3 rounded-xl bg-muted/60 p-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold text-accent">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold  text-accent">
             {profile?.data?.fullname?.charAt(0)?.toUpperCase() || "U"}
           </div>
 

@@ -1,10 +1,11 @@
 import React from "react";
-import SideNavbar from "./sideNavbar";
+import SideNavbar from "../components/SideNavbar";
 import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useGetprofileQuery } from "../lib/api";
 const Layout = () => {
   const { data, isLoading } = useGetprofileQuery();
-
+  
+  
   // Profile এখনো load হচ্ছে
   if (isLoading) {
     return (
@@ -13,7 +14,7 @@ const Layout = () => {
       </div>
     );
   }
-  console.log("akhne asche ");
+
   // Data না থাকলে login page এ যাবে
   if (!data) {
     return <Navigate to="/login" />;
