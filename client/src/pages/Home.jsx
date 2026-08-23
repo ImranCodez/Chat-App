@@ -12,7 +12,6 @@ import { toast } from "react-toastify";
 
 const Home = () => {
   const [messageText, setMessageText] = useState("");
-
   // .......redux...data ..
   const perticipentdata = useSelector((state) => state.activeconv.active);
   // ....backend data feting....
