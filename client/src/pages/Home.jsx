@@ -7,7 +7,7 @@ import {
 } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { useLazyGetMessagesQuery } from "../lib/api";
-import { useGetprofileQuery, useSendMessageMutation } from "../lib/api";
+import { apiSlice, useSendMessageMutation } from "../lib/api";
 import { toast } from "react-toastify";
 
 const Home = () => {
@@ -15,10 +15,13 @@ const Home = () => {
   // .......redux...data ..
   const perticipentdata = useSelector((state) => state.activeconv.active);
   // ....backend data feting....
-  const [triggermessage, { data = [], isLoading, error }] = useLazyGetMessagesQuery();
-  const { data: profileResponse } = useGetprofileQuery();
+  const [triggermessage, { data = [], isLoading, error }] =
+    useLazyGetMessagesQuery();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
-  console.log(data?.data)
+  console.log(data?.data);
+  const profileResponse = useSelector(
+    apiSlice.endpoints.getprofile.select(),
+  ).data;
   const currentUserId = profileResponse?.data?._id;
   useEffect(() => {
     if (perticipentdata?.convId) {
@@ -136,30 +139,42 @@ const Home = () => {
         className="relative flex flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
         id="chatDisplay"
       >
-        {isLoading && <p className="m-auto text-sm text-text-muted">Loading messages...</p>}
-        {error && <p className="m-auto text-sm text-error">Could not load messages.</p>}
+        {isLoading && (
+          <p className="m-auto text-sm text-text-muted">Loading messages...</p>
+        )}
+        {error && (
+          <p className="m-auto text-sm text-error">Could not load messages.</p>
+        )}
         {!isLoading && !error && !data?.data?.length && (
-          <p className="m-auto text-sm text-text-muted">No messages yet. Say hello.</p>
+          <p className="m-auto text-sm text-text-muted">
+            No messages yet. Say hello.
+          </p>
         )}
         {data?.data?.map((items) => {
-          return items?.sender?._id == perticipentdata?._id ? (
-            <div
-              key={items._id || items.content}
-              className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
-            >
-              {items.content}
-            </div>
-          ) : (
+          const senderId = items?.sender?._id || items?.sender;
+          const isOwnMessage = String(senderId) === String(currentUserId);
+
+          return isOwnMessage ? (
             <div
               key={items._id || items.content}
               className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
             >
               {items.content}
             </div>
+          ) : (
+            <div
+              key={items._id || items.content}
+              className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
+            >
+              {items.content}
+            </div>
           );
         })}
       </div>
-      <form onSubmit={submitMessage} className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6">
+      <form
+        onSubmit={submitMessage}
+        className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6"
+      >
         <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-1.5 focus-within:border-brand/70">
           <button
             type="button"

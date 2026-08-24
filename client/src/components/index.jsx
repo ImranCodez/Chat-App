@@ -22,7 +22,7 @@ const Layout = () => {
 
   return (
     <div className="flex min-h-screen bg-bg">
-      <SideNavbar profile={data} />
+      <SideNavbar Userprofile={data} />
       <main className="min-w-0 flex-1">
         <Outlet />
       </main>

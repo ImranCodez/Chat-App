@@ -5,17 +5,13 @@ import { toast } from "react-toastify";
 import { useAddFriendMutation, useGetConversationQuery } from "../lib/api";
 import { FiMessageCircle, FiPlus, FiX, FiLogOut } from "react-icons/fi";
 
-const SideNavbar = ({ profile }) => {
+const SideNavbar = ({ Userprofile }) => {
   const { data, isFetching } = useGetConversationQuery();
-console.log(profile?.data);
-
   const [isAddingFriend, setIsAddingFriend] = useState(false);
-
-  // Friend email object
+  // Frien email object
   const [frdemail, setEmail] = useState({
     email: "",
   });
-
   const [inputerr, setEmaierro] = useState("");
 
   const [addFriend, { isLoading: isAdding }] = useAddFriendMutation();
@@ -103,7 +99,7 @@ console.log(profile?.data);
               value={frdemail.email}
               onChange={(event) => {
                 // Update email property inside object
-                setEmail((prev) => ({...prev, email: event.target.value,}));// Remove error when user starts typing
+                setEmail((prev) => ({ ...prev, email: event.target.value })); // Remove error when user starts typing
                 setEmaierro("");
               }}
               placeholder="Find your friend.."
@@ -134,7 +130,7 @@ console.log(profile?.data);
         <div className="min-h-0 space-y-1 overflow-y-auto pr-1">
           {isFetching && (
             <p className="px-2 py-4 text-sm text-text-muted">
-              Loading chats...
+              Loading chats....
             </p>
           )}
 
@@ -142,7 +138,7 @@ console.log(profile?.data);
             <ConversationItems
               key={items._id}
               profile={items}
-              myid={profile?.data?._id}
+              myid={Userprofile?.data?._id}
             />
           ))}
         </div>
@@ -152,12 +148,12 @@ console.log(profile?.data);
       <div className="mt-5 border-t border-border pt-4">
         <div className="mb-3 flex items-center gap-3 rounded-xl bg-muted/60 p-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold  text-accent">
-            {profile?.data?.fullname?.charAt(0)?.toUpperCase() || "U"}
+            {Userprofile?.data?.fullname?.charAt(0)?.toUpperCase() || "U"}
           </div>
 
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-text-primary">
-              {profile?.data?.fullname}
+              {Userprofile?.data?.fullname}
             </p>
 
             <p className="text-xs text-online">Active now</p>
