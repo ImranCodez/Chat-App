@@ -7,22 +7,16 @@ import {
 } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { useLazyGetMessagesQuery } from "../lib/api";
-import { apiSlice, useSendMessageMutation } from "../lib/api";
 import { toast } from "react-toastify";
 
 const Home = () => {
   const [messageText, setMessageText] = useState("");
   // .......redux...data ..
-  const perticipentdata = useSelector((state) => state.activeconv.active);
+  const perticipentdata = useSelector((state)=>(state.activeconv.active))
+  const currentUserId = perticipentdata?._id;
   // ....backend data feting....
-  const [triggermessage, { data = [], isLoading, error }] =
-    useLazyGetMessagesQuery();
+  const [triggermessage, { data = [], isLoading, error }] =useLazyGetMessagesQuery();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
-  console.log(data?.data);
-  const profileResponse = useSelector(
-    apiSlice.endpoints.getprofile.select(),
-  ).data;
-  const currentUserId = profileResponse?.data?._id;
   useEffect(() => {
     if (perticipentdata?.convId) {
       triggermessage(perticipentdata?.convId);
@@ -37,7 +31,7 @@ const Home = () => {
       await sendMessage({
         content,
         conversation: perticipentdata.convId,
-        contentype: "text",
+  
       }).unwrap();
       setMessageText("");
       triggermessage(perticipentdata.convId);
@@ -152,19 +146,21 @@ const Home = () => {
         )}
         {data?.data?.map((items) => {
           const senderId = items?.sender?._id || items?.sender;
+          console.log(senderId)
           const isOwnMessage = String(senderId) === String(currentUserId);
 
           return isOwnMessage ? (
             <div
               key={items._id || items.content}
-              className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
+              className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
             >
               {items.content}
             </div>
+            
           ) : (
             <div
               key={items._id || items.content}
-              className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
+              className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
             >
               {items.content}
             </div>
@@ -187,7 +183,7 @@ const Home = () => {
             value={messageText}
             onChange={(event) => setMessageText(event.target.value)}
             placeholder="Type your message..."
-            className="min-w-0 flex-1 bg-transparent px-2 text-sm text-text-primary outline-none placeholder:text-text-muted"
+            className="min-w-0 flex-1 bg-transparent  px-2 text-sm text-text-primary outline-none placeholder:text-text-muted"
             id="chatInput"
             type="text"
           />

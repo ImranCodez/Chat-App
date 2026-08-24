@@ -12,6 +12,7 @@ const SideNavbar = ({ Userprofile }) => {
   const [frdemail, setEmail] = useState({
     email: "",
   });
+  console.log(data)
   const [inputerr, setEmaierro] = useState("");
 
   const [addFriend, { isLoading: isAdding }] = useAddFriendMutation();
@@ -27,9 +28,8 @@ const SideNavbar = ({ Userprofile }) => {
       if (!frdemail.email.trim()) {
         return setEmaierro("Enter your friend's email");
       }
-      // Backend receives { email: "friend@gmail.com" }
-      const res = await addFriend(frdemail).unwrap();
-      console.log(res);
+    const res = await addFriend(frdemail).unwrap()
+      
 
       toast.success("Contact added");
 
