@@ -5,24 +5,54 @@ import {
   FiPaperclip,
   FiSend,
 } from "react-icons/fi";
-import { useSelector } from "react-redux";
-import { useLazyGetMessagesQuery } from "../lib/api";
+import { useDispatch, useSelector } from "react-redux";
+import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
+import { apiSlice } from "../lib/api";
 import { toast } from "react-toastify";
+import { initsocket } from "../lib/socketApi";
 
 const Home = () => {
   const [messageText, setMessageText] = useState("");
+  const dispatch = useDispatch();
   // .......redux...data ..
-  const perticipentdata = useSelector((state)=>(state.activeconv.active))
+  const perticipentdata = useSelector((state) => state.activeconv.active);
   const currentUserId = perticipentdata?._id;
   // ....backend data feting....
-  const [triggermessage, { data = [], isLoading, error }] =useLazyGetMessagesQuery();
+  const [triggermessage, { data = [], isLoading, error }] =
+    useLazyGetMessagesQuery();
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   useEffect(() => {
     if (perticipentdata?.convId) {
       triggermessage(perticipentdata?.convId);
     }
   }, [perticipentdata]);
+  //  ....socket connet....
+  useEffect(() => {
+    const socket = initsocket();
 
+    const handleNewMessage = (message) => {
+      const conversationId = String(message?.conversation);
+      if (!conversationId) return;
+
+      // Socket events must update RTK Query's cache; logging the payload does not update Redux.
+      dispatch(
+        apiSlice.util.updateQueryData(
+          "getMessages",
+          conversationId,
+          (cache) => {
+            if (!cache?.data) return;
+            const alreadyExists = cache.data.some(
+              (item) => String(item._id) === String(message._id),
+            );
+            if (!alreadyExists) cache.data.push(message);
+          },
+        ),
+      );
+    };
+
+    socket.on("new_message", handleNewMessage);
+    return () => socket.off("new_message", handleNewMessage);
+  }, [dispatch]);
   const submitMessage = async (event) => {
     event.preventDefault();
     const content = messageText.trim();
@@ -31,7 +61,6 @@ const Home = () => {
       await sendMessage({
         content,
         conversation: perticipentdata.convId,
-  
       }).unwrap();
       setMessageText("");
       triggermessage(perticipentdata.convId);
@@ -146,7 +175,6 @@ const Home = () => {
         )}
         {data?.data?.map((items) => {
           const senderId = items?.sender?._id || items?.sender;
-          console.log(senderId)
           const isOwnMessage = String(senderId) === String(currentUserId);
 
           return isOwnMessage ? (
@@ -156,7 +184,6 @@ const Home = () => {
             >
               {items.content}
             </div>
-            
           ) : (
             <div
               key={items._id || items.content}

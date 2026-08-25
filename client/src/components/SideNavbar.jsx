@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ConversationItems from "./ui/ConversationItems";
 import { toast } from "react-toastify";
 import { useAddFriendMutation, useGetConversationQuery } from "../lib/api";
 import { FiMessageCircle, FiPlus, FiX, FiLogOut } from "react-icons/fi";
+import { initsocket } from "../lib/socketApi";
 
 const SideNavbar = ({ Userprofile }) => {
   const { data, isFetching } = useGetConversationQuery();
   const [isAddingFriend, setIsAddingFriend] = useState(false);
+
+  useEffect(() => {
+    if (!data?.data) return;
+
+    const socket = initsocket();
+    data.data.forEach((conversation) => {
+      socket.emit("join_room", conversation._id);
+    });
+  }, [data]);
+
   // Frien email object
   const [frdemail, setEmail] = useState({
     email: "",
   });
-  console.log(data)
+  console.log(data);
   const [inputerr, setEmaierro] = useState("");
 
   const [addFriend, { isLoading: isAdding }] = useAddFriendMutation();
@@ -28,8 +39,7 @@ const SideNavbar = ({ Userprofile }) => {
       if (!frdemail.email.trim()) {
         return setEmaierro("Enter your friend's email");
       }
-    const res = await addFriend(frdemail).unwrap()
-      
+      const res = await addFriend(frdemail).unwrap();
 
       toast.success("Contact added");
 
