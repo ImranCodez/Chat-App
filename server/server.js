@@ -1,16 +1,12 @@
 require("dotenv").config();
-
 const express = require("express");
 const route = require("./routes");
 const cors = require("cors");
 const dbcongfig = require("./dbconfig");
 const cookieParser = require("cookie-parser");
-
 const app = express();
-
 const { createServer } = require("http");
 const httpServer = createServer(app);
-
 const io = require("socket.io")(httpServer, {
   cors: {
     origin: "http://localhost:5173",
@@ -51,5 +47,5 @@ dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 // Server
 httpServer.listen(8000, () => {
-  console.log("Server is running on port 8000");
+  console.log("Server is running on port ");
 });
