@@ -9,12 +9,12 @@ import { initsocket } from "../lib/socketApi";
 const SideNavbar = ({ Userprofile }) => {
   const { data, isFetching } = useGetConversationQuery();
   const [isAddingFriend, setIsAddingFriend] = useState(false);
-
+  
   useEffect(() => {
     if (!data?.data) return;
 
     const socket = initsocket();
-    data.data.forEach((conversation) => {
+    data?.data?.forEach((conversation) => {
       socket.emit("join_room", conversation._id);
     });
   }, [data]);
@@ -23,7 +23,7 @@ const SideNavbar = ({ Userprofile }) => {
   const [frdemail, setEmail] = useState({
     email: "",
   });
-  console.log(data);
+ 
   const [inputerr, setEmaierro] = useState("");
 
   const [addFriend, { isLoading: isAdding }] = useAddFriendMutation();

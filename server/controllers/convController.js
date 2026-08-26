@@ -67,6 +67,7 @@ const Sendmessage = async (req, res) => {
       conversation,
       sender: req.user.id,
     });
+    // .....Socket code here....
     global.io.to(conversation).emit("new_message", message);
     sendResponse(res, 201, "sent hoise");
   } catch (error) {

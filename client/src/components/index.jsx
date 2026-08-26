@@ -4,8 +4,6 @@ import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useGetprofileQuery } from "../lib/api";
 const Layout = () => {
   const { data, isLoading } = useGetprofileQuery();
-  
-  
   // Profile এখনো load হচ্ছে
   if (isLoading) {
     return (
