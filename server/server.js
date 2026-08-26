@@ -2,11 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const route = require("./routes");
 const cors = require("cors");
+const joinRoom=require("./helpers/Join_room")
 const dbcongfig = require("./dbconfig");
 const cookieParser = require("cookie-parser");
 const app = express();
 const { createServer } = require("http");
-const httpServer = createServer(app);
+const httpServer = createServer(app); 
 const io = require("socket.io")(httpServer, {
   cors: {
     origin: "http://localhost:5173",
@@ -31,11 +32,12 @@ app.use(
 app.use(express.json());
 
 // Socket
-io.on("connection", (socket) => {
-  socket.on("join_room", (convoId) => {
-    socket.join(convoId);
+
+
+
+  io.on("connection", (socket) => {
+    joinRoom(socket)
   });
-});
 
 // Routes
 app.use(route);

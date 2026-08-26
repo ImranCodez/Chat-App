@@ -1,4 +1,6 @@
 import io from "socket.io-client";
+import { store } from "../store";
+import { apiSlice } from "./api";
 
 let socket;
 
@@ -11,8 +13,28 @@ const initsocket = () => {
     console.log("✅ Socket connected:", socket.id);
   });
 
-  socket.on("new_message", (res) => {
-    console.log("📩 New message:", res);
+  socket.on("new_message", (message) => {
+    console.log("📩 New message:", message);
+
+    const conversationId = String(message?.conversation);
+
+    if (!conversationId) return;
+
+    store.dispatch(
+      apiSlice.util.updateQueryData("getMessages",conversationId,
+        (cache) => {
+          if (!cache?.data) return;
+       console.log(cache?.data)
+          const alreadyExists = cache.data.some(
+            (item) => String(item._id) === String(message._id)
+          );
+
+          if (!alreadyExists) {
+            cache.data.push(message);
+          }
+        }
+      )
+    );
   });
 
   socket.on("connect_error", (error) => {

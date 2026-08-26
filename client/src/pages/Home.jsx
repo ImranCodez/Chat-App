@@ -1,80 +1,127 @@
 import React, { useEffect, useState } from "react";
+
 import {
   FiMessageCircle,
   FiMoreVertical,
   FiPaperclip,
   FiSend,
 } from "react-icons/fi";
-import { useDispatch, useSelector } from "react-redux";
-import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
-import { apiSlice } from "../lib/api";
+
+import { useSelector } from "react-redux";
+
+import {
+  useLazyGetMessagesQuery,
+  useSendMessageMutation,
+} from "../lib/api";
+
 import { toast } from "react-toastify";
+
 import { initsocket } from "../lib/socketApi";
 
 const Home = () => {
   const [messageText, setMessageText] = useState("");
-  const dispatch = useDispatch();
-  // .......redux...data ..
-  const perticipentdata = useSelector((state) => state.activeconv.active);
+
+  // Active conversation
+  const perticipentdata = useSelector(
+    (state) => state.activeconv.active
+  );
+
   const currentUserId = perticipentdata?._id;
-  // ....backend data feting....
-  const [triggermessage, { data = [], isLoading, error }] =
-    useLazyGetMessagesQuery();
-  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+
+  // Get messages
+  const [
+    triggermessage,
+    {
+      data = [],
+      isLoading,
+      error,
+    },
+  ] = useLazyGetMessagesQuery();
+
+  // Send message
+  const [
+    sendMessage,
+    { isLoading: isSending },
+  ] = useSendMessageMutation();
+
+  // --------------------------------
+  // Socket connection
+  // --------------------------------
+
+  useEffect(() => {
+    initsocket();
+  }, []);
+
+  // --------------------------------
+  // Get messages when conversation changes
+  // --------------------------------
+
   useEffect(() => {
     if (perticipentdata?.convId) {
-      triggermessage(perticipentdata?.convId);
-    }
-  }, [perticipentdata]);
-  //  ....socket connet....
-  useEffect(() => {
-    const socket = initsocket();
-
-    const handleNewMessage = (message) => {
-      const conversationId = String(message?.conversation);
-      if (!conversationId) return;
-
-      // Socket events must update RTK Query's cache; logging the payload does not update Redux.
-      dispatch(
-        apiSlice.util.updateQueryData(
-          "getMessages",
-          conversationId,
-          (cache) => {
-            if (!cache?.data) return;
-            const alreadyExists = cache.data.some(
-              (item) => String(item._id) === String(message._id),
-            );
-            if (!alreadyExists) cache.data.push(message);
-          },
-        ),
+      triggermessage(
+        perticipentdata.convId
       );
-    };
+    }
+  }, [perticipentdata, triggermessage]);
 
-    socket.on("new_message", handleNewMessage);
-    return () => socket.off("new_message", handleNewMessage);
-  }, [dispatch]);
+  // --------------------------------
+  // Send message
+  // --------------------------------
+
   const submitMessage = async (event) => {
     event.preventDefault();
+
     const content = messageText.trim();
-    if (!content || !perticipentdata?.convId || isSending) return;
+
+    if (
+      !content ||
+      !perticipentdata?.convId ||
+      isSending
+    ) {
+      return;
+    }
+
     try {
       await sendMessage({
         content,
         conversation: perticipentdata.convId,
       }).unwrap();
+
+      // Input clear
       setMessageText("");
-      triggermessage(perticipentdata.convId);
+
+      /*
+        এখানে আর:
+
+        triggermessage(perticipentdata.convId)
+
+        দরকার নেই।
+
+        কারণ server থেকে Socket event আসবে
+        এবং socketApi.js RTK Query cache update করবে।
+      */
     } catch (sendError) {
-      toast.error(sendError?.data?.message || "Message could not be sent");
+      toast.error(
+        sendError?.data?.message ||
+          "Message could not be sent"
+      );
     }
   };
+
+  // --------------------------------
+  // No active conversation
+  // --------------------------------
 
   if (!perticipentdata) {
     return (
       <div className="ambient-canvas relative flex min-h-screen items-center justify-center overflow-hidden bg-bg px-6">
+
         <div className="ambient-grid pointer-events-none absolute inset-0" />
+
         <div className="pointer-events-none absolute left-[12%] top-[18%] h-3 w-3 rounded-full bg-accent/60 float-slow" />
+
         <div className="pointer-events-none absolute bottom-[22%] right-[16%] h-2 w-2 rounded-full bg-brand-light/70 float-delayed" />
+
         <svg
           className="pointer-events-none absolute h-[min(78vw,34rem)] w-[min(78vw,34rem)] text-accent/25"
           viewBox="0 0 540 540"
@@ -90,6 +137,7 @@ const Home = () => {
             strokeWidth="1"
             strokeDasharray="2 14"
           />
+
           <circle
             className="welcome-orbit-reverse"
             cx="270"
@@ -99,12 +147,14 @@ const Home = () => {
             strokeWidth="1"
             strokeDasharray="1 10"
           />
+
           <path
             className="welcome-dash"
             d="M74 332C150 198 216 392 302 246S428 140 482 204"
             stroke="currentColor"
             strokeWidth="1.5"
           />
+
           <circle
             className="welcome-pulse"
             cx="270"
@@ -115,8 +165,10 @@ const Home = () => {
             strokeWidth="1.5"
           />
         </svg>
+
         <div className="form-enter relative flex max-w-sm flex-col items-center text-center">
-          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border hover:border-white duration-300 border-brand/30 bg-accent-soft text-accent shadow-xl shadow-brand/10">
+
+          <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-brand/30 bg-accent-soft text-accent shadow-xl shadow-brand/10 hover:border-white duration-300">
             <FiMessageCircle size={30} />
           </div>
 
@@ -128,28 +180,50 @@ const Home = () => {
             Select a conversation from the sidebar to pick up where you left
             off.
           </p>
+
         </div>
       </div>
     );
   }
 
+  // --------------------------------
+  // Chat UI
+  // --------------------------------
+
   return (
     <section className="ambient-canvas relative flex min-h-screen w-full flex-col overflow-hidden bg-bg">
+
       <div className="ambient-grid pointer-events-none absolute inset-0" />
+
       <div className="pointer-events-none absolute right-[12%] top-24 h-32 w-32 rounded-full border border-accent/10 float-slow" />
+
       <div className="pointer-events-none absolute bottom-32 left-[18%] h-16 w-16 rounded-xl border border-brand/15 bg-brand/5 float-delayed" />
+
+      {/* Header */}
+
       <div className="chat-enter relative flex items-center justify-between border-b border-border bg-surface/95 px-6 py-4 backdrop-blur-sm">
+
         <div className="flex min-w-0 items-center gap-3">
+
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
-            {perticipentdata.fullname?.charAt(0)?.toUpperCase() || "U"}
+            {perticipentdata.fullname
+              ?.charAt(0)
+              ?.toUpperCase() || "U"}
           </div>
+
           <div className="min-w-0">
+
             <h2 className="truncate text-base font-semibold text-text-primary">
               {perticipentdata.fullname}
             </h2>
-            <p className="text-xs text-online">Online now</p>
+
+            <p className="text-xs text-online">
+              Online now
+            </p>
+
           </div>
         </div>
+
         <button
           type="button"
           className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-muted hover:text-text-primary"
@@ -157,25 +231,45 @@ const Home = () => {
         >
           <FiMoreVertical size={18} />
         </button>
+
       </div>
+
+      {/* Messages */}
+
       <div
         className="relative flex flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
         id="chatDisplay"
       >
+
         {isLoading && (
-          <p className="m-auto text-sm text-text-muted">Loading messages...</p>
-        )}
-        {error && (
-          <p className="m-auto text-sm text-error">Could not load messages.</p>
-        )}
-        {!isLoading && !error && !data?.data?.length && (
           <p className="m-auto text-sm text-text-muted">
-            No messages yet. Say hello.
+            Loading messages...
           </p>
         )}
+
+        {error && (
+          <p className="m-auto text-sm text-error">
+            Could not load messages.
+          </p>
+        )}
+
+        {!isLoading &&
+          !error &&
+          !data?.data?.length && (
+            <p className="m-auto text-sm text-text-muted">
+              No messages yet. Say hello.
+            </p>
+          )}
+
         {data?.data?.map((items) => {
-          const senderId = items?.sender?._id || items?.sender;
-          const isOwnMessage = String(senderId) === String(currentUserId);
+
+          const senderId =
+            items?.sender?._id ||
+            items?.sender;
+
+          const isOwnMessage =
+            String(senderId) ===
+            String(currentUserId);
 
           return isOwnMessage ? (
             <div
@@ -193,12 +287,18 @@ const Home = () => {
             </div>
           );
         })}
+
       </div>
+
+      {/* Input */}
+
       <form
         onSubmit={submitMessage}
         className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6"
       >
+
         <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-1.5 focus-within:border-brand/70">
+
           <button
             type="button"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-hover hover:text-accent"
@@ -206,25 +306,34 @@ const Home = () => {
           >
             <FiPaperclip size={18} />
           </button>
+
           <input
             value={messageText}
-            onChange={(event) => setMessageText(event.target.value)}
+            onChange={(event) =>
+              setMessageText(event.target.value)
+            }
             placeholder="Type your message..."
-            className="min-w-0 flex-1 bg-transparent  px-2 text-sm text-text-primary outline-none placeholder:text-text-muted"
+            className="min-w-0 flex-1 bg-transparent px-2 text-sm text-text-primary outline-none placeholder:text-text-muted"
             id="chatInput"
             type="text"
           />
+
           <button
             type="submit"
-            disabled={isSending || !messageText.trim()}
+            disabled={
+              isSending ||
+              !messageText.trim()
+            }
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-50"
             id="sendButton"
             aria-label="Send message"
           >
             <FiSend size={17} />
           </button>
+
         </div>
       </form>
+
     </section>
   );
 };
