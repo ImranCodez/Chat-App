@@ -69,6 +69,32 @@ const Sendmessage = async (req, res) => {
     });
     // .....Socket code here....
     global.io.to(conversation).emit("new_message", message);
+
+
+        //          Backend
+        //             │
+        //   message DB-তে save
+        //             │
+        //             ▼
+        //      saved message
+        //             │
+        //      ┌──────┴──────┐
+        //      ▼             ▼
+        // MongoDB          Socket
+        //                    │
+        //                    ▼
+        //           "new_message"
+        //                    │
+        //                    ▼
+        //              Frontend
+        //                    │
+        //                    ▼
+        //           RTK Query cache
+        //                    │
+        //                    ▼
+        //                   UI
+
+
     sendResponse(res, 201, "sent hoise");
   } catch (error) {
     console.log(error);

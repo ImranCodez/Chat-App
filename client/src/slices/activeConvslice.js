@@ -7,8 +7,8 @@ const ActiveconvenSlic = createSlice({
   },
   reducers: {
     activeConversation: (state, action) => {
-      console.log(action.payload);
       state.active =action.payload;
+      console.log(action.payload);
     },
   },
 });

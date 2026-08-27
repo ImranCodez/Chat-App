@@ -5,17 +5,16 @@ const ConversationItems = ({ profile, myid }) => {
   const dispatch = useDispatch();
   const isCreator = profile?.creator?._id === myid;
   const contact = isCreator ? profile?.participent : profile?.creator;
-
- console.log(contact)
+  
   const activeconvhanlde = () => {
     dispatch(activeConversation({ ...contact, convId: profile._id }));
   };
   return (
     <div
       onClick={activeconvhanlde}
-      className="group flex cursor-pointer items-center gap-3 rounded-xl border border-transparent px-2 py-3 transition hover:border-border bg-amber-900 hover:bg-muted"
+      className="group flex cursor-pointer items-center gap-3 rounded-xl border border-transparent bg-accent-soft px-2 py-3 transition hover:border-border  hover:bg-muted"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand/30 bg-accent-soft font-bold  text-accent">
+      <div className="flex h-11 bg-blue-900 w-11 shrink-0 items-center justify-center rounded-full border border-brand/30  font-bold  text-accent">
         {(contact?.fullname || "U").charAt(0).toUpperCase()}
       </div>
 

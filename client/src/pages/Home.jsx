@@ -37,7 +37,27 @@ const Home = () => {
       error,
     },
   ] = useLazyGetMessagesQuery();
-
+//      তুমি "Hello" লিখলে
+//        ↓
+// Send button
+//        ↓
+// sendMessage(...)
+//        ↓
+// Backend API
+//        ↓
+// Controller
+//        ↓
+// MongoDB
+//        ↓
+// Message DB-তে save ✅
+//        ↓
+// Server Socket দিয়ে new_message পাঠায়
+//        ↓
+// Frontend socket সেটা receive করে
+//        ↓
+// RTK Query cache update
+//        ↓
+// UI-তে message দেখা যায়
   // Send message
   const [
     sendMessage,
