@@ -25,6 +25,8 @@ const Home = () => {
   const perticipentdata = useSelector(
     (state) => state.activeconv.active
   );
+  console.log(perticipentdata);
+  
 
   const currentUserId = perticipentdata?._id;
 

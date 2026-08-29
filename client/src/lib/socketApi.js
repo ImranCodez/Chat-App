@@ -14,7 +14,7 @@ const initsocket = () => {
   });
 
   socket.on("new_message", (message) => {
-    console.log("📩 New message:", message);
+    console.log("📩New message:", message);
 
     const conversationId = String(message?.conversation);
 

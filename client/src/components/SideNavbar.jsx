@@ -54,6 +54,12 @@ const SideNavbar = ({ Userprofile }) => {
     }
   };
 
+  // ... akhne lokoh koro gpt..
+   const conversationitems=data?.data?.map((items)=>{
+     console.log("myallconversatioitems",items)
+    return items
+   })
+   console.log(conversationitems)
   return (
     <aside className="flex h-screen w-full max-w-[280px] shrink-0 flex-col border-r border-border bg-surface px-4 py-5">
       {/* Header */}
