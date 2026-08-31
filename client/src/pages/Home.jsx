@@ -1,5 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
 
+import React, { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import {
+  useLazyGetMessagesQuery,
+  useSendMessageMutation,
+} from "../lib/api";
+import { toast } from "react-toastify";
+import { initsocket } from "../lib/socketApi";
 import {
   FiMessageCircle,
   FiMoreVertical,
@@ -7,51 +14,37 @@ import {
   FiSend,
 } from "react-icons/fi";
 
-import { useSelector } from "react-redux";
-
-import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
-
-import { toast } from "react-toastify";
-
-import { initsocket } from "../lib/socketApi";
-
 const Home = () => {
   const [messageText, setMessageText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+
   const typingTimeoutRef = useRef(null);
 
+  // --------------------------------
   // Active conversation
-  const perticipentdata = useSelector((state) => state.activeconv.active);
+  // --------------------------------
+
+  const perticipentdata = useSelector(
+    (state) => state.activeconv.active
+  );
 
   const currentUserId = perticipentdata?._id;
 
+  // --------------------------------
   // Get messages
-  const [triggermessage, { data = [], isLoading, error }] =
-    useLazyGetMessagesQuery();
+  // --------------------------------
 
-  //      তুমি "Hello" লিখলে
-  //        ↓
-  // Send button
-  //        ↓
-  // sendMessage(...)
-  //        ↓
-  // Backend API
-  //        ↓
-  // Controller
-  //        ↓
-  // MongoDB
-  //        ↓
-  // Message DB-তে save ✅
-  //        ↓
-  // Server Socket দিয়ে new_message পাঠায়
-  //        ↓
-  // Frontend socket সেটা receive করে
-  //        ↓
-  // RTK Query cache update
-  //        ↓
-  // UI-তে message দেখা যায়
+  const [
+    triggermessage,
+    { data = [], isLoading, error },
+  ] = useLazyGetMessagesQuery();
+
+  // --------------------------------
   // Send message
-  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  // --------------------------------
+
+  const [sendMessage, { isLoading: isSending }] =
+    useSendMessageMutation();
 
   // --------------------------------
   // Socket connection
@@ -70,18 +63,30 @@ const Home = () => {
       triggermessage(perticipentdata.convId);
     }
   }, [perticipentdata, triggermessage]);
+
+  // --------------------------------
+  // Typing socket listener
+  // --------------------------------
+
   useEffect(() => {
     const socket = initsocket();
+
     if (!perticipentdata?.convId) return;
 
     const handleTyping = ({ conversationId }) => {
-      if (String(conversationId) === String(perticipentdata.convId)) {
+      if (
+        String(conversationId) ===
+        String(perticipentdata.convId)
+      ) {
         setIsTyping(true);
       }
     };
 
     const handleStopTyping = ({ conversationId }) => {
-      if (String(conversationId) === String(perticipentdata.convId)) {
+      if (
+        String(conversationId) ===
+        String(perticipentdata.convId)
+      ) {
         setIsTyping(false);
       }
     };
@@ -95,28 +100,58 @@ const Home = () => {
     };
   }, [perticipentdata?.convId]);
 
+  // --------------------------------
+  // Typing status
+  // --------------------------------
+
   const handleTypingStatus = (value) => {
     const socket = initsocket();
 
     if (!perticipentdata?.convId) return;
 
-    if (value.trim()) {
-      socket.emit("typing", { conversationId: perticipentdata.convId });
-    } else {
-      socket.emit("stop_typing", { conversationId: perticipentdata.convId });
-      setIsTyping(false);
-      return;
-    }
+    const conversationId = perticipentdata.convId;
 
+    // Clear previous timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
+    // Input empty
+    if (!value.trim()) {
+      socket.emit("stop_typing", {
+        conversationId,
+      });
+
+      setIsTyping(false);
+      return;
+    }
+
+    // User is typing
+    socket.emit("typing", {
+      conversationId,
+    });
+
+    // Automatically stop typing after 1.2 seconds
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit("stop_typing", { conversationId: perticipentdata.convId });
+      socket.emit("stop_typing", {
+        conversationId,
+      });
+
       setIsTyping(false);
     }, 1200);
   };
+
+  // --------------------------------
+  // Cleanup typing timeout
+  // --------------------------------
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // --------------------------------
   // Send message
@@ -127,21 +162,48 @@ const Home = () => {
 
     const content = messageText.trim();
 
-    if (!content || !perticipentdata?.convId || isSending) {
+    if (
+      !content ||
+      !perticipentdata?.convId ||
+      isSending
+    ) {
       return;
+    }
+
+    const conversationId = perticipentdata.convId;
+
+    // Stop typing immediately when message is sent
+    const socket = initsocket();
+
+    socket.emit("stop_typing", {
+      conversationId,
+    });
+
+    setIsTyping(false);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
 
     try {
       const response = await sendMessage({
         content,
-        conversation: perticipentdata.convId,
+        conversation: conversationId,
       }).unwrap();
 
+      // Clear input
       setMessageText("");
 
-      if (response?.data?.conversation || perticipentdata?.convId) {
-        const conversationId =
-          response?.data?.conversation || perticipentdata.convId;
+      // --------------------------------
+      // Update conversation list
+      // --------------------------------
+
+      if (
+        response?.data?.conversation ||
+        conversationId
+      ) {
+        const conversationIdFromResponse =
+          response?.data?.conversation || conversationId;
 
         import("../store").then(({ store }) => {
           import("../lib/api").then(({ apiSlice }) => {
@@ -150,33 +212,50 @@ const Home = () => {
                 "getConversation",
                 undefined,
                 (cache) => {
-                  if (!cache?.data || !Array.isArray(cache.data)) return;
+                  if (
+                    !cache?.data ||
+                    !Array.isArray(cache.data)
+                  ) {
+                    return;
+                  }
 
-                  const targetIndex = cache.data.findIndex(
-                    (item) => String(item._id) === String(conversationId),
-                  );
+                  const targetIndex =
+                    cache.data.findIndex(
+                      (item) =>
+                        String(item._id) ===
+                        String(conversationIdFromResponse)
+                    );
 
                   if (targetIndex === -1) return;
 
                   cache.data[targetIndex] = {
                     ...cache.data[targetIndex],
                     lastmessage: content,
-                    updatedAt: new Date().toISOString(),
+                    updatedAt:
+                      new Date().toISOString(),
                   };
 
+                  // Latest conversation first
                   cache.data.sort(
                     (a, b) =>
-                      new Date(b.updatedAt || 0).getTime() -
-                      new Date(a.updatedAt || 0).getTime(),
+                      new Date(
+                        b.updatedAt || 0
+                      ).getTime() -
+                      new Date(
+                        a.updatedAt || 0
+                      ).getTime()
                   );
-                },
-              ),
+                }
+              )
             );
           });
         });
       }
     } catch (sendError) {
-      toast.error(sendError?.data?.message || "Message could not be sent");
+      toast.error(
+        sendError?.data?.message ||
+          "Message could not be sent"
+      );
     }
   };
 
@@ -267,12 +346,16 @@ const Home = () => {
 
       <div className="pointer-events-none absolute bottom-32 left-[18%] h-16 w-16 rounded-xl border border-brand/15 bg-brand/5 float-delayed" />
 
-      {/* Header */}
+      {/* --------------------------------
+          Header
+      -------------------------------- */}
 
       <div className="chat-enter relative flex items-center justify-between border-b border-border bg-surface/95 px-6 py-4 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
-            {perticipentdata.fullname?.charAt(0)?.toUpperCase() || "U"}
+            {perticipentdata.fullname
+              ?.charAt(0)
+              ?.toUpperCase() || "U"}
           </div>
 
           <div className="min-w-0">
@@ -295,66 +378,87 @@ const Home = () => {
         </button>
       </div>
 
-      {/* Messages */}
+      {/* --------------------------------
+          Messages
+      -------------------------------- */}
 
       <div
         className="relative flex flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
         id="chatDisplay"
       >
         {isLoading && (
-          <p className="m-auto text-sm text-text-muted">Loading messages...</p>
-        )}
-
-        {error && (
-          <p className="m-auto text-sm text-error">Could not load messages.</p>
-        )}
-
-        {!isLoading && !error && !data?.data?.length && (
           <p className="m-auto text-sm text-text-muted">
-            No messages yet. Say hello.
+            Loading messages...
           </p>
         )}
 
-        {data?.data?.map((items) => {
-          const senderId = items?.sender?._id || items?.sender;
+        {error && (
+          <p className="m-auto text-sm text-error">
+            Could not load messages.
+          </p>
+        )}
 
-          const isOwnMessage = String(senderId) === String(currentUserId);
+        {!isLoading &&
+          !error &&
+          !data?.data?.length && (
+            <p className="m-auto text-sm text-text-muted">
+              No messages yet. Say hello.
+            </p>
+          )}
 
-          return isOwnMessage ? (
-            <div
-              key={items._id || items.content}
-              className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
+        {/* --------------------------------
+            Existing Messages
+        -------------------------------- */}
+
+        {!isLoading &&
+          !error &&
+          data?.data?.map((items) => {
+            const senderId =
+              items?.sender?._id || items?.sender;
+
+            const isOwnMessage =
+              String(senderId) ===
+              String(currentUserId);
+
+            return isOwnMessage ? (
+              <div
+                key={items._id || items.content}
+                className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
+              >
+                {items.content}
+              </div>
+            ) : (
+              <div
+                key={items._id || items.content}
+                className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
+              >
+                {items.content}
+              </div>
+            );
+          })}
+
+       
+
+        {isTyping && (
+          <div
+            className="message-enter flex max-w-[min(75%,28rem)] self-start items-center rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-3"
+            aria-live="polite"
+          >
+            <span
+              className="typing-indicator"
+              aria-label="Typing indicator"
             >
-              {" "}
-              {isTyping && (
-                <div
-                  className="mb-2 flex items-center gap-2 px-2 text-xs text-accent"
-                  aria-live="polite"
-                >
-                  <span
-                    className="typing-indicator"
-                    aria-label="Typing indicator"
-                  >
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
-                    <span className="typing-dot" />
-                  </span>
-                </div>
-              )}
-              {items.content}
-            </div>
-          ) : (
-            <div
-              key={items._id || items.content}
-              className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
-            >
-              {items.content}
-            </div>
-          );
-        })}
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Input */}
+      {/* --------------------------------
+          Input
+      -------------------------------- */}
 
       <form
         onSubmit={submitMessage}
@@ -373,7 +477,9 @@ const Home = () => {
             value={messageText}
             onChange={(event) => {
               const nextValue = event.target.value;
+
               setMessageText(nextValue);
+
               handleTypingStatus(nextValue);
             }}
             placeholder="Type your message..."
@@ -384,7 +490,10 @@ const Home = () => {
 
           <button
             type="submit"
-            disabled={isSending || !messageText.trim()}
+            disabled={
+              isSending ||
+              !messageText.trim()
+            }
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-50"
             id="sendButton"
             aria-label="Send message"
