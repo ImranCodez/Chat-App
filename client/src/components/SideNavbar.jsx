@@ -9,10 +9,9 @@ import { initsocket } from "../lib/socketApi";
 const SideNavbar = ({ Userprofile }) => {
   const { data, isFetching } = useGetConversationQuery();
   const [isAddingFriend, setIsAddingFriend] = useState(false);
-  
+
   useEffect(() => {
     if (!data?.data) return;
-
     const socket = initsocket();
     data?.data?.forEach((conversation) => {
       socket.emit("join_room", conversation._id);
@@ -23,7 +22,7 @@ const SideNavbar = ({ Userprofile }) => {
   const [frdemail, setEmail] = useState({
     email: "",
   });
- 
+
   const [inputerr, setEmaierro] = useState("");
 
   const [addFriend, { isLoading: isAdding }] = useAddFriendMutation();
@@ -54,12 +53,6 @@ const SideNavbar = ({ Userprofile }) => {
     }
   };
 
-  // ... akhne lokoh koro gpt..
-   const conversationitems=data?.data?.map((items)=>{
-     console.log("myallconversatioitems",items)
-    return items
-   })
-   console.log(conversationitems)
   return (
     <aside className="flex h-screen w-full max-w-[280px] shrink-0 flex-col border-r border-border bg-surface px-4 py-5">
       {/* Header */}

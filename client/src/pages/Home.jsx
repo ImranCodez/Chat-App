@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
   FiMessageCircle,
@@ -9,10 +9,7 @@ import {
 
 import { useSelector } from "react-redux";
 
-import {
-  useLazyGetMessagesQuery,
-  useSendMessageMutation,
-} from "../lib/api";
+import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
 
 import { toast } from "react-toastify";
 
@@ -20,51 +17,41 @@ import { initsocket } from "../lib/socketApi";
 
 const Home = () => {
   const [messageText, setMessageText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   // Active conversation
-  const perticipentdata = useSelector(
-    (state) => state.activeconv.active
-  );
-  console.log(perticipentdata);
-  
+  const perticipentdata = useSelector((state) => state.activeconv.active);
 
   const currentUserId = perticipentdata?._id;
 
   // Get messages
-  const [
-    triggermessage,
-    {
-      data = [],
-      isLoading,
-      error,
-    },
-  ] = useLazyGetMessagesQuery();
-//      তুমি "Hello" লিখলে
-//        ↓
-// Send button
-//        ↓
-// sendMessage(...)
-//        ↓
-// Backend API
-//        ↓
-// Controller
-//        ↓
-// MongoDB
-//        ↓
-// Message DB-তে save ✅
-//        ↓
-// Server Socket দিয়ে new_message পাঠায়
-//        ↓
-// Frontend socket সেটা receive করে
-//        ↓
-// RTK Query cache update
-//        ↓
-// UI-তে message দেখা যায়
+  const [triggermessage, { data = [], isLoading, error }] =
+    useLazyGetMessagesQuery();
+
+  //      তুমি "Hello" লিখলে
+  //        ↓
+  // Send button
+  //        ↓
+  // sendMessage(...)
+  //        ↓
+  // Backend API
+  //        ↓
+  // Controller
+  //        ↓
+  // MongoDB
+  //        ↓
+  // Message DB-তে save ✅
+  //        ↓
+  // Server Socket দিয়ে new_message পাঠায়
+  //        ↓
+  // Frontend socket সেটা receive করে
+  //        ↓
+  // RTK Query cache update
+  //        ↓
+  // UI-তে message দেখা যায়
   // Send message
-  const [
-    sendMessage,
-    { isLoading: isSending },
-  ] = useSendMessageMutation();
+  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
   // --------------------------------
   // Socket connection
@@ -80,11 +67,56 @@ const Home = () => {
 
   useEffect(() => {
     if (perticipentdata?.convId) {
-      triggermessage(
-        perticipentdata.convId
-      );
+      triggermessage(perticipentdata.convId);
     }
   }, [perticipentdata, triggermessage]);
+  useEffect(() => {
+    const socket = initsocket();
+    if (!perticipentdata?.convId) return;
+
+    const handleTyping = ({ conversationId }) => {
+      if (String(conversationId) === String(perticipentdata.convId)) {
+        setIsTyping(true);
+      }
+    };
+
+    const handleStopTyping = ({ conversationId }) => {
+      if (String(conversationId) === String(perticipentdata.convId)) {
+        setIsTyping(false);
+      }
+    };
+
+    socket.on("typing", handleTyping);
+    socket.on("stop_typing", handleStopTyping);
+
+    return () => {
+      socket.off("typing", handleTyping);
+      socket.off("stop_typing", handleStopTyping);
+    };
+  }, [perticipentdata?.convId]);
+
+  const handleTypingStatus = (value) => {
+    const socket = initsocket();
+
+    if (!perticipentdata?.convId) return;
+
+    if (value.trim()) {
+      socket.emit("typing", { conversationId: perticipentdata.convId });
+    } else {
+      socket.emit("stop_typing", { conversationId: perticipentdata.convId });
+      setIsTyping(false);
+      return;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stop_typing", { conversationId: perticipentdata.convId });
+      setIsTyping(false);
+    }, 1200);
+  };
 
   // --------------------------------
   // Send message
@@ -95,38 +127,56 @@ const Home = () => {
 
     const content = messageText.trim();
 
-    if (
-      !content ||
-      !perticipentdata?.convId ||
-      isSending
-    ) {
+    if (!content || !perticipentdata?.convId || isSending) {
       return;
     }
 
     try {
-      await sendMessage({
+      const response = await sendMessage({
         content,
         conversation: perticipentdata.convId,
       }).unwrap();
 
-      // Input clear
       setMessageText("");
 
-      /*
-        এখানে আর:
+      if (response?.data?.conversation || perticipentdata?.convId) {
+        const conversationId =
+          response?.data?.conversation || perticipentdata.convId;
 
-        triggermessage(perticipentdata.convId)
+        import("../store").then(({ store }) => {
+          import("../lib/api").then(({ apiSlice }) => {
+            store.dispatch(
+              apiSlice.util.updateQueryData(
+                "getConversation",
+                undefined,
+                (cache) => {
+                  if (!cache?.data || !Array.isArray(cache.data)) return;
 
-        দরকার নেই।
+                  const targetIndex = cache.data.findIndex(
+                    (item) => String(item._id) === String(conversationId),
+                  );
 
-        কারণ server থেকে Socket event আসবে
-        এবং socketApi.js RTK Query cache update করবে।
-      */
+                  if (targetIndex === -1) return;
+
+                  cache.data[targetIndex] = {
+                    ...cache.data[targetIndex],
+                    lastmessage: content,
+                    updatedAt: new Date().toISOString(),
+                  };
+
+                  cache.data.sort(
+                    (a, b) =>
+                      new Date(b.updatedAt || 0).getTime() -
+                      new Date(a.updatedAt || 0).getTime(),
+                  );
+                },
+              ),
+            );
+          });
+        });
+      }
     } catch (sendError) {
-      toast.error(
-        sendError?.data?.message ||
-          "Message could not be sent"
-      );
+      toast.error(sendError?.data?.message || "Message could not be sent");
     }
   };
 
@@ -137,7 +187,6 @@ const Home = () => {
   if (!perticipentdata) {
     return (
       <div className="ambient-canvas relative flex min-h-screen items-center justify-center overflow-hidden bg-bg px-6">
-
         <div className="ambient-grid pointer-events-none absolute inset-0" />
 
         <div className="pointer-events-none absolute left-[12%] top-[18%] h-3 w-3 rounded-full bg-accent/60 float-slow" />
@@ -189,7 +238,6 @@ const Home = () => {
         </svg>
 
         <div className="form-enter relative flex max-w-sm flex-col items-center text-center">
-
           <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-brand/30 bg-accent-soft text-accent shadow-xl shadow-brand/10 hover:border-white duration-300">
             <FiMessageCircle size={30} />
           </div>
@@ -202,7 +250,6 @@ const Home = () => {
             Select a conversation from the sidebar to pick up where you left
             off.
           </p>
-
         </div>
       </div>
     );
@@ -214,7 +261,6 @@ const Home = () => {
 
   return (
     <section className="ambient-canvas relative flex min-h-screen w-full flex-col overflow-hidden bg-bg">
-
       <div className="ambient-grid pointer-events-none absolute inset-0" />
 
       <div className="pointer-events-none absolute right-[12%] top-24 h-32 w-32 rounded-full border border-accent/10 float-slow" />
@@ -224,25 +270,19 @@ const Home = () => {
       {/* Header */}
 
       <div className="chat-enter relative flex items-center justify-between border-b border-border bg-surface/95 px-6 py-4 backdrop-blur-sm">
-
         <div className="flex min-w-0 items-center gap-3">
-
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
-            {perticipentdata.fullname
-              ?.charAt(0)
-              ?.toUpperCase() || "U"}
+            {perticipentdata.fullname?.charAt(0)?.toUpperCase() || "U"}
           </div>
 
           <div className="min-w-0">
-
             <h2 className="truncate text-base font-semibold text-text-primary">
               {perticipentdata.fullname}
             </h2>
 
             <p className="text-xs text-online">
-              Online now
+              {isTyping ? "Typing..." : "Online now"}
             </p>
-
           </div>
         </div>
 
@@ -253,7 +293,6 @@ const Home = () => {
         >
           <FiMoreVertical size={18} />
         </button>
-
       </div>
 
       {/* Messages */}
@@ -262,42 +301,46 @@ const Home = () => {
         className="relative flex flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
         id="chatDisplay"
       >
-
         {isLoading && (
-          <p className="m-auto text-sm text-text-muted">
-            Loading messages...
-          </p>
+          <p className="m-auto text-sm text-text-muted">Loading messages...</p>
         )}
 
         {error && (
-          <p className="m-auto text-sm text-error">
-            Could not load messages.
+          <p className="m-auto text-sm text-error">Could not load messages.</p>
+        )}
+
+        {!isLoading && !error && !data?.data?.length && (
+          <p className="m-auto text-sm text-text-muted">
+            No messages yet. Say hello.
           </p>
         )}
 
-        {!isLoading &&
-          !error &&
-          !data?.data?.length && (
-            <p className="m-auto text-sm text-text-muted">
-              No messages yet. Say hello.
-            </p>
-          )}
-
         {data?.data?.map((items) => {
+          const senderId = items?.sender?._id || items?.sender;
 
-          const senderId =
-            items?.sender?._id ||
-            items?.sender;
-
-          const isOwnMessage =
-            String(senderId) ===
-            String(currentUserId);
+          const isOwnMessage = String(senderId) === String(currentUserId);
 
           return isOwnMessage ? (
             <div
               key={items._id || items.content}
               className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
             >
+              {" "}
+              {isTyping && (
+                <div
+                  className="mb-2 flex items-center gap-2 px-2 text-xs text-accent"
+                  aria-live="polite"
+                >
+                  <span
+                    className="typing-indicator"
+                    aria-label="Typing indicator"
+                  >
+                    <span className="typing-dot" />
+                    <span className="typing-dot" />
+                    <span className="typing-dot" />
+                  </span>
+                </div>
+              )}
               {items.content}
             </div>
           ) : (
@@ -309,7 +352,6 @@ const Home = () => {
             </div>
           );
         })}
-
       </div>
 
       {/* Input */}
@@ -318,9 +360,7 @@ const Home = () => {
         onSubmit={submitMessage}
         className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6"
       >
-
         <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-1.5 focus-within:border-brand/70">
-
           <button
             type="button"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-text-muted transition hover:bg-surface-hover hover:text-accent"
@@ -331,9 +371,11 @@ const Home = () => {
 
           <input
             value={messageText}
-            onChange={(event) =>
-              setMessageText(event.target.value)
-            }
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              setMessageText(nextValue);
+              handleTypingStatus(nextValue);
+            }}
             placeholder="Type your message..."
             className="min-w-0 flex-1 bg-transparent px-2 text-sm text-text-primary outline-none placeholder:text-text-muted"
             id="chatInput"
@@ -342,20 +384,15 @@ const Home = () => {
 
           <button
             type="submit"
-            disabled={
-              isSending ||
-              !messageText.trim()
-            }
+            disabled={isSending || !messageText.trim()}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-50"
             id="sendButton"
             aria-label="Send message"
           >
             <FiSend size={17} />
           </button>
-
         </div>
       </form>
-
     </section>
   );
 };

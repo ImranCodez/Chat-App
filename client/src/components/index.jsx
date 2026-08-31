@@ -5,7 +5,6 @@ import { useGetprofileQuery } from "../lib/api";
 const Layout = () => {
   const { data, isLoading } = useGetprofileQuery();
 
-  // Profile এখনো load হচ্ছে
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg text-text-secondary">
@@ -14,7 +13,6 @@ const Layout = () => {
     );
   }
 
-  // Data না থাকলে login page এ যাবে
   if (!data) {
     return <Navigate to="/login" />;
   }

@@ -26,12 +26,13 @@ export const apiSlice = createApi({
     }),
     getConversation: build.query({
       query: () => "/conv/list",
+      providesTags: ["Conversations"],
     }),
     addFriend: build.mutation({
       query: (email) => ({
         url: "/conv/addfriend",
         method: "POST",
-        body:email ,
+        body: email,
       }),
       invalidatesTags: ["Conversations"],
     }),
@@ -41,6 +42,7 @@ export const apiSlice = createApi({
         method: "POST",
         body: message,
       }),
+      invalidatesTags: ["Conversations"],
     }),
     getMessages: build.query({
       query: (convId) => `/conv/messageslist/${convId}`,

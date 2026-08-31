@@ -5,12 +5,11 @@ const ConversationItems = ({ profile, myid }) => {
   const dispatch = useDispatch();
   const isCreator = profile?.creator?._id === myid;
   const contact = isCreator ? profile?.participent : profile?.creator;
-
-  console.log("FULL PROFILE:", profile);
-  console.log("PARTICIPANT:", profile?.participent);
   const activeconvhanlde = () => {
     dispatch(activeConversation({ ...contact, convId: profile._id }));
   };
+
+  console.log("all participents",profile)
   return (
     <div
       onClick={activeconvhanlde}

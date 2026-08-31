@@ -4,9 +4,6 @@ const joinRoom = (socket) => {
 
 module.exports = joinRoom;
 
-
-
-
 // Client
 //   ↓
 // conversation._id
@@ -19,4 +16,4 @@ module.exports = joinRoom;
 //   ↓
 // conversationId পাওয়া গেল
 //   ↓
-// socket.join(conversationId)
+// socket.join(conversationId)  

@@ -21,107 +21,43 @@ const initsocket = () => {
     if (!conversationId) return;
 
     store.dispatch(
-      apiSlice.util.updateQueryData("getMessages",conversationId,
-        (cache) => {
-          if (!cache?.data) return;
-       console.log(cache?.data)
-          const alreadyExists = cache.data.some(
-            (item) => String(item._id) === String(message._id)
-          );
+      apiSlice.util.updateQueryData("getMessages", conversationId, (cache) => {
+        if (!cache?.data) return;
 
-          if (!alreadyExists) {
-            cache.data.push(message);
-          }
+        const alreadyExists = cache.data.some(
+          (item) => String(item._id) === String(message._id),
+        );
+
+        if (!alreadyExists) {
+          cache.data.push(message);
         }
-      )
+      }),
+    );
+
+    store.dispatch(
+      apiSlice.util.updateQueryData("getConversation", undefined, (cache) => {
+        if (!cache?.data || !Array.isArray(cache.data)) return;
+
+        const targetIndex = cache.data.findIndex(
+          (item) => String(item._id) === conversationId,
+        );
+
+        if (targetIndex === -1) return;
+
+        cache.data[targetIndex] = {
+          ...cache.data[targetIndex],
+          lastmessage: message.content,
+          updatedAt: message.createdAt || new Date().toISOString(),
+        };
+
+        cache.data.sort(
+          (a, b) =>
+            new Date(b.updatedAt || 0).getTime() -
+            new Date(a.updatedAt || 0).getTime(),
+        );
+      }),
     );
   });
-// 1. Socket → নতুন message পেল
-//           ↓
-// 2. conversationId বের করল
-//           ↓
-// 3. getMessages-এর cache খুঁজল
-//           ↓
-// 4. message আগে আছে কিনা check করল
-//           ↓
-// 5. না থাকলে cache.data-তে push করল
-//           ↓
-// 6. RTK Query cache update → React UI update
-
-  // .flow chart ..
-
-
-
-      //                 SERVER
-      //                 │
-      //                 │ নতুন message পাঠায়
-      //                 ▼
-      //        "new_message" event
-      //                 │
-      //                 ▼
-      //   socket.on("new_message", message)
-      //                 │
-      //                 │
-      //                 ▼
-      //   ┌──────────────────────────┐
-      //   │ message থেকে conversation │
-      //   │ ID বের করা হচ্ছে          │
-      //   └──────────────────────────┘
-      //                 │
-      //                 ▼
-      //  conversationId = message.conversation
-      //                 │
-      //                 ▼
-      //        conversationId আছে?
-      //            /          \
-      //          NO            YES
-      //          │              │
-      //          ▼              ▼
-      //         STOP      store.dispatch()
-      //                         │
-      //                         ▼
-      //             updateQueryData()
-      //                         │
-      //                         ▼
-      //               "getMessages"
-      //                         │
-      //                         ▼
-      //               conversationId
-      //                         │
-      //                         ▼
-      //            RTK Query Cache খুঁজে
-      //                         │
-      //                         ▼
-      //                  cache পাওয়া?
-      //                    /       \
-      //                  NO         YES
-      //                  │           │
-      //                  ▼           ▼
-      //                 STOP    cache.data
-      //                              │
-      //                              ▼
-      //                    .some() দিয়ে check
-      //                              │
-      //                              ▼
-      //              message আগে থেকেই আছে?
-      //                    /              \
-      //                  YES              NO
-      //                   │                │
-      //                   ▼                ▼
-      //             কিছু করবে না     cache.data.push(message)
-      //                                    │
-      //                                    ▼
-      //                             RTK Query Cache
-      //                                 updated
-      //                                    │
-      //                                    ▼
-      //                         useGetMessagesQuery()
-      //                                    │
-      //                                    ▼
-      //                              React UI update
-      //                                    │
-      //                                    ▼
-      //                         নতুন message দেখা যায়
   socket.on("connect_error", (error) => {
     console.log("❌ Socket connection error:", error.message);
   });

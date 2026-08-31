@@ -52,53 +52,44 @@ const conversation = async (req, res) => {
     sendResponse(res, 500, "Internal server error");
   }
 };
-
 const Sendmessage = async (req, res) => {
   try {
     const { content, conversation, contentype = "text" } = req.body;
-    const isExistConversation = await conversationSchema.find({
-      _id: conversation,
-    });
-    if (!isExistConversation)
+
+    // 1. Validate input
+    if (!content || !conversation) {
+      return sendResponse(res, 400, "content and conversation are required");
+    }
+
+    // 2. Check conversation
+    const existingConversation =
+      await conversationSchema.findById(conversation);
+    console.log(existingConversation);
+    if (!existingConversation) {
       return sendResponse(res, 404, "conversation not found");
+    }
+
+    // 3. Save message
     const message = await messaegesSchema.create({
       content,
       contentype,
       conversation,
       sender: req.user.id,
     });
-    // .....Socket code here....
+
+    // 4. Update last message
+    existingConversation.lastmessage = content;
+
+    await existingConversation.save();
+
+    // 5. Send realtime message
     global.io.to(conversation).emit("new_message", message);
 
-
-        //          Backend
-        //             │
-        //   message DB-তে save
-        //             │
-        //             ▼
-        //      saved message
-        //             │
-        //      ┌──────┴──────┐
-        //      ▼             ▼
-        // MongoDB          Socket
-        //                    │
-        //                    ▼
-        //           "new_message"
-        //                    │
-        //                    ▼
-        //              Frontend
-        //                    │
-        //                    ▼
-        //           RTK Query cache
-        //                    │
-        //                    ▼
-        //                   UI
-
-
-    sendResponse(res, 201, "sent hoise");
+    // 6. Send response
+    return sendResponse(res, 201, "sent hoise", message);
   } catch (error) {
     console.log(error);
-    sendResponse(res, 500, "Internal server error");
+    return sendResponse(res, 500, "Internal server error");
   }
 };
 const messageGet = async (req, res) => {
