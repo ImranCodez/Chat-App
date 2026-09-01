@@ -6,7 +6,7 @@ import {
   useSendMessageMutation,
 } from "../lib/api";
 import { toast } from "react-toastify";
-import { initsocket } from "../lib/socketApi";
+
 import {
   FiMessageCircle,
   FiMoreVertical,
@@ -14,11 +14,17 @@ import {
   FiSend,
 } from "react-icons/fi";
 
+import { initsocket } from "../lib/socketApi";
+
 const Home = () => {
   const [messageText, setMessageText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
+  // Typing timeout
   const typingTimeoutRef = useRef(null);
+
+  // Chat container reference
+  const chatDisplayRef = useRef(null);
 
   // --------------------------------
   // Active conversation
@@ -63,6 +69,17 @@ const Home = () => {
       triggermessage(perticipentdata.convId);
     }
   }, [perticipentdata, triggermessage]);
+
+  // --------------------------------
+  // AUTO SCROLL TO BOTTOM
+  // --------------------------------
+
+  useEffect(() => {
+    if (!chatDisplayRef.current) return;
+
+    chatDisplayRef.current.scrollTop =
+      chatDisplayRef.current.scrollHeight;
+  }, [data?.data, isTyping]);
 
   // --------------------------------
   // Typing socket listener
@@ -116,22 +133,33 @@ const Home = () => {
       clearTimeout(typingTimeoutRef.current);
     }
 
+    // --------------------------------
     // Input empty
+    // --------------------------------
+
     if (!value.trim()) {
       socket.emit("stop_typing", {
         conversationId,
       });
 
       setIsTyping(false);
+
       return;
     }
 
+    // --------------------------------
     // User is typing
+    // --------------------------------
+
     socket.emit("typing", {
       conversationId,
     });
 
-    // Automatically stop typing after 1.2 seconds
+    // --------------------------------
+    // Automatically stop typing
+    // after 1.2 seconds
+    // --------------------------------
+
     typingTimeoutRef.current = setTimeout(() => {
       socket.emit("stop_typing", {
         conversationId,
@@ -172,7 +200,10 @@ const Home = () => {
 
     const conversationId = perticipentdata.convId;
 
-    // Stop typing immediately when message is sent
+    // --------------------------------
+    // Stop typing immediately
+    // --------------------------------
+
     const socket = initsocket();
 
     socket.emit("stop_typing", {
@@ -181,9 +212,14 @@ const Home = () => {
 
     setIsTyping(false);
 
+    // Clear typing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
+
+    // --------------------------------
+    // Send message
+    // --------------------------------
 
     try {
       const response = await sendMessage({
@@ -203,7 +239,8 @@ const Home = () => {
         conversationId
       ) {
         const conversationIdFromResponse =
-          response?.data?.conversation || conversationId;
+          response?.data?.conversation ||
+          conversationId;
 
         import("../store").then(({ store }) => {
           import("../lib/api").then(({ apiSlice }) => {
@@ -223,7 +260,9 @@ const Home = () => {
                     cache.data.findIndex(
                       (item) =>
                         String(item._id) ===
-                        String(conversationIdFromResponse)
+                        String(
+                          conversationIdFromResponse
+                        )
                     );
 
                   if (targetIndex === -1) return;
@@ -326,8 +365,8 @@ const Home = () => {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-text-secondary">
-            Select a conversation from the sidebar to pick up where you left
-            off.
+            Select a conversation from the sidebar to pick
+            up where you left off.
           </p>
         </div>
       </div>
@@ -339,7 +378,7 @@ const Home = () => {
   // --------------------------------
 
   return (
-    <section className="ambient-canvas relative flex min-h-screen w-full flex-col overflow-hidden bg-bg">
+    <section className="ambient-canvas relative flex h-screen w-full flex-col overflow-hidden bg-bg">
       <div className="ambient-grid pointer-events-none absolute inset-0" />
 
       <div className="pointer-events-none absolute right-[12%] top-24 h-32 w-32 rounded-full border border-accent/10 float-slow" />
@@ -350,7 +389,7 @@ const Home = () => {
           Header
       -------------------------------- */}
 
-      <div className="chat-enter relative flex items-center justify-between border-b border-border bg-surface/95 px-6 py-4 backdrop-blur-sm">
+      <div className="chat-enter relative flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-6 py-4 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
             {perticipentdata.fullname
@@ -383,7 +422,8 @@ const Home = () => {
       -------------------------------- */}
 
       <div
-        className="relative flex flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
+        ref={chatDisplayRef}
+        className="relative flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
         id="chatDisplay"
       >
         {isLoading && (
@@ -437,7 +477,9 @@ const Home = () => {
             );
           })}
 
-       
+        {/* --------------------------------
+            Typing Indicator
+        -------------------------------- */}
 
         {isTyping && (
           <div
@@ -462,7 +504,7 @@ const Home = () => {
 
       <form
         onSubmit={submitMessage}
-        className="relative border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6"
+        className="relative shrink-0 border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6"
       >
         <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-1.5 focus-within:border-brand/70">
           <button

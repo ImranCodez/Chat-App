@@ -10,7 +10,7 @@ const { createServer } = require("http");
 const httpServer = createServer(app);
 const io = require("socket.io")(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin:process.env.CLIENT_URL,
     credentials: true,
   },
 });
@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:process.env.CLIENT_URL,
     credentials: true,
   }),
 );

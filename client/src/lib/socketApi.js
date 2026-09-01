@@ -7,7 +7,7 @@ let socket;
 const initsocket = () => {
   if (socket) return socket;
 
-  socket = io("http://localhost:8000");
+  socket = io(process.env.SERVER_URL);
 
   socket.on("connect", () => {
     console.log("✅ Socket connected:", socket.id);

@@ -18,9 +18,9 @@ const Layout = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-bg">
+    <div className="flex h-screen overflow-hidden bg-bg">
       <SideNavbar Userprofile={data} />
-      <main className="min-w-0 flex-1">
+      <main className="min-w-0 flex-1 overflow-hidden">
         <Outlet />
       </main>
     </div>
