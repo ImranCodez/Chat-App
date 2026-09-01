@@ -8,9 +8,19 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const { createServer } = require("http");
 const httpServer = createServer(app);
+
+const allowedOrigins = [
+  ...(process.env.CLIENT_URL || "").split(","),
+  "http://localhost:5173",
+  "https://chat-app-1-jma3.onrender.com",
+]
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean)
+  .filter((origin, index, origins) => origins.indexOf(origin) === index);
+
 const io = require("socket.io")(httpServer, {
   cors: {
-    origin:"http://localhost:5173/",
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -21,10 +31,11 @@ dbcongfig();
 
 // Middleware
 app.use(cookieParser());
-
+console.log("🔥 CORS ALLOWED ORIGINS:", allowedOrigins);
 app.use(
   cors({
-    origin:"http://localhost:5173/",
+    // Credentials require an explicit origin; support both local development and production.
+    origin: allowedOrigins,
     credentials: true,
   }),
 );

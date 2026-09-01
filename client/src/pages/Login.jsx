@@ -38,7 +38,7 @@ const Login = () => {
 
     try {
       const res = await loginuser(longindata).unwrap();
-
+  console.log(res)
       toast.success("Login successful!", {
         autoClose: 3000,
       });
@@ -51,9 +51,9 @@ const Login = () => {
         password: "",
       });
     } catch (error) {
-      console.log("Login error:", error);
+      console.log("Login error:", error?.data?.message);
 
-      toast.error(error?.data?.message || "Invalid email or password");
+      toast.error(error?.data?.message || "Invalid email fffffff or password");
     }
   };
 

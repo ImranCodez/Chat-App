@@ -50,12 +50,13 @@ const signinuser = async (req, res) => {
       httpOnly: true, // Prevents client-side JavaScript from accessing the cookie, mitigating XSS
       maxAge: 1000 * 60 * 40, // Cookie expiry time in milliseconds (e.g., 15 minutes)
       secure: true, // Ensures the cookie is only sent over HTTPS (set to false for local HTTP development)
+      sameSite: "none", // The local frontend and deployed API are different origins.
     };
     const cookieRFcsOptions = {
       httpOnly: true,
       maxAge: 1296000000, // Cookie expiry time in milliseconds (e.g., 15 days)
       secure: true,
-      sameSite: "Strict",
+      sameSite: "none",
     };
 
     res.cookie("accessToken", token, cookieAcsOptions);
