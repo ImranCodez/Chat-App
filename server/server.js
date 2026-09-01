@@ -8,11 +8,11 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const { createServer } = require("http");
 const httpServer = createServer(app);
-
+const allowedOrigin = "https://chat-app-1-jma3.onrender.com";
 const allowedOrigins = [
   ...(process.env.CLIENT_URL || "").split(","),
   "http://localhost:5173",
-  "https://chat-app-1-jma3.onrender.com",
+  allowedOrigin,
 ]
   .map((origin) => origin.trim().replace(/\/$/, ""))
   .filter(Boolean)
@@ -31,6 +31,7 @@ dbcongfig();
 
 // Middleware
 app.use(cookieParser());
+
 console.log("🔥 CORS ALLOWED ORIGINS:", allowedOrigins);
 app.use(
   cors({
