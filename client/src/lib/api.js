@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.SERVER_URL,
+    baseUrl: "https://chat-app-bmda.onrender.com",
     credentials: "include",
   }),
 

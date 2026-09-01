@@ -1,6 +1,6 @@
 const sendResponse = require("../helpers/responsehandler");
 const { generateAccsToken, generateRefToken } = require("../helpers/token");
-    const userAuthSchema=require("../models/userSchema")
+const userAuthSchema = require("../models/userSchema");
 // ...........signup part...//
 const signupuser = async (req, res) => {
   try {
@@ -27,7 +27,7 @@ const signupuser = async (req, res) => {
     sendResponse(res, 201, "signup is successfull");
   } catch (error) {
     console.log(error);
-    
+
     sendResponse(res, 500, false, "Internal server error");
   }
 };
@@ -35,6 +35,8 @@ const signupuser = async (req, res) => {
 const signinuser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(email, password);
+
     if (!email) return sendResponse(res, 400, "email is required");
     if (!password) return sendResponse(res, 400, "password is required");
     const existingUser = await userAuthSchema.findOne({ email });
@@ -45,15 +47,15 @@ const signinuser = async (req, res) => {
     const token = generateAccsToken(existingUser);
     const reftoken = generateRefToken(existingUser);
     const cookieAcsOptions = {
-      httpOnly: false, // Prevents client-side JavaScript from accessing the cookie, mitigating XSS
+      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie, mitigating XSS
       maxAge: 1000 * 60 * 40, // Cookie expiry time in milliseconds (e.g., 15 minutes)
-      secure: false, // Ensures the cookie is only sent over HTTPS (set to false for local HTTP development)
+      secure: true, // Ensures the cookie is only sent over HTTPS (set to false for local HTTP development)
     };
     const cookieRFcsOptions = {
-      httpOnly: false,
+      httpOnly: true,
       maxAge: 1296000000, // Cookie expiry time in milliseconds (e.g., 15 days)
-      secure: false,
-      // sameSite: 'Strict',
+      secure: true,
+      sameSite: "Strict",
     };
 
     res.cookie("accessToken", token, cookieAcsOptions);
@@ -76,7 +78,8 @@ const getprofile = async (req, res) => {
   } catch (error) {
     sendResponse(res, 500, "Internal server error");
   }
-};module.exports = {
+};
+module.exports = {
   signupuser,
   signinuser,
   getprofile,
