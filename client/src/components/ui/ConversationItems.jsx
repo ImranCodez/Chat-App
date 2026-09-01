@@ -18,12 +18,10 @@ const ConversationItems = ({ profile, myid }) => {
       <div className="flex h-11 bg-blue-900 w-11 shrink-0 items-center justify-center rounded-full border border-brand/30  font-bold  text-accent">
         {(contact?.fullname || "U").charAt(0).toUpperCase()}
       </div>
-
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-sm font-semibold text-text-primary">
           {contact?.fullname || "Unknown contact"}
         </h1>
-
         <p className="mt-1 truncate text-xs text-text-muted transition group-hover:text-text-secondary">
           {profile.lastmessage && profile.lastmessage !== "null"
             ? profile.lastmessage
