@@ -1,0 +1,10 @@
+# dependencies
+**/node_modules/
+
+# environment files
+**/.env
+**/.env.*
+
+# lock files (optional, if you do not want them in GitHub)
+# package-lock.json
+# **/package-lock.json
