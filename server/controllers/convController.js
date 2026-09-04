@@ -191,10 +191,54 @@ const deleteMessage = async (req, res) => {
   }
 };
 
+const reactToMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { emoji } = req.body;
+    if (!emoji) return sendResponse(res, 400, "emoji is required");
+
+    const message = await messaegesSchema.findById(messageId);
+    if (!message) return sendResponse(res, 404, "message not found");
+
+    const conversation = await conversationSchema.findOne({
+      _id: message.conversation,
+      $or: [{ creator: req.user.id }, { participent: req.user.id }],
+    });
+    if (!conversation) return sendResponse(res, 403, "conversation not found");
+
+    if (!Array.isArray(message.reactions)) message.reactions = [];
+    const existingReaction = message.reactions.find(
+      (reaction) => String(reaction.user) === String(req.user.id),
+    );
+    if (existingReaction) {
+      existingReaction.emoji = String(emoji);
+    } else {
+      message.reactions.push({ user: req.user.id, emoji: String(emoji) });
+    }
+
+    await message.save();
+    global.io.to(String(message.conversation)).emit("message_reaction", {
+      messageId,
+      conversationId: String(message.conversation),
+      reactions: message.reactions,
+    });
+    return sendResponse(res, 200, "reaction saved", true, message);
+  } catch (error) {
+    console.log(error);
+    return sendResponse(
+      res,
+      500,
+      error.message || "Could not save reaction",
+      false,
+    );
+  }
+};
+
 module.exports = {
   addFriend,
   conversation,
   Sendmessage,
   messageGet,
   deleteMessage,
+  reactToMessage,
 };

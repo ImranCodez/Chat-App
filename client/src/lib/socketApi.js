@@ -86,6 +86,16 @@ const initsocket = () => {
       );
     },
   );
+  socket.on("message_reaction", ({ messageId, conversationId, reactions }) => {
+    store.dispatch(
+      apiSlice.util.updateQueryData("getMessages", conversationId, (cache) => {
+        const target = cache?.data?.find(
+          (item) => String(item._id) === String(messageId),
+        );
+        if (target) target.reactions = reactions;
+      }),
+    );
+  });
   socket.on("connect_error", (error) => {
     console.log("❌ Socket connection error:", error.message);
   });

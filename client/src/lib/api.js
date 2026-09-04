@@ -13,6 +13,20 @@ const safeDeleteResponse = async (response) => {
   }
 };
 
+const safeReactionResponse = async (response) => {
+  const text = await response.text();
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {
+      reactionRouteUnavailable: true,
+      message: `Reaction request returned HTTP ${response.status}`,
+      status: response.status,
+    };
+  }
+};
+
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: "https://chat-app-bmda.onrender.com",
   credentials: "include",
@@ -81,6 +95,50 @@ export const apiSlice = createApi({
     getMessages: build.query({
       query: (convId) => `/conv/messageslist/${convId}`,
     }),
+    reactToMessage: build.mutation({
+      async queryFn({ messageId, emoji }, api, extraOptions, baseQuery) {
+        const result = await baseQuery(
+          {
+            url: `/conv/message/${encodeURIComponent(messageId)}/react`,
+            method: "POST",
+            body: { emoji },
+            responseHandler: safeReactionResponse,
+          },
+          api,
+          extraOptions,
+        );
+
+        if (!result.error && !result.data?.reactionRouteUnavailable) {
+          return result;
+        }
+
+        if (result.error && !result.error.data?.reactionRouteUnavailable) {
+          return result;
+        }
+
+        const fallbackResult = await baseQuery(
+          {
+            url: `/conv/message/${encodeURIComponent(messageId)}/reaction`,
+            method: "POST",
+            body: { emoji },
+            responseHandler: safeReactionResponse,
+          },
+          api,
+          extraOptions,
+        );
+
+        if (fallbackResult.data?.reactionRouteUnavailable) {
+          return {
+            error: {
+              status: "CUSTOM_ERROR",
+              error: fallbackResult.data.message,
+            },
+          };
+        }
+
+        return fallbackResult;
+      },
+    }),
     deleteMessage: build.mutation({
       async queryFn({ messageId, mode }, api, extraOptions, baseQuery) {
         const request = {
@@ -127,6 +185,7 @@ export const {
   useSignupMutation,
   useGetprofileQuery,
   useLazyGetMessagesQuery,
+  useReactToMessageMutation,
   useAddFriendMutation,
   useSendMessageMutation,
   useDeleteMessageMutation,

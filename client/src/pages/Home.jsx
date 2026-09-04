@@ -6,6 +6,7 @@ import {
   useDeleteMessageMutation,
   useGetprofileQuery,
   useLazyGetMessagesQuery,
+  useReactToMessageMutation,
   useSendMessageMutation,
 } from "../lib/api";
 import { toast } from "react-toastify";
@@ -60,6 +61,7 @@ const Home = () => {
 
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
   const [deleteMessage, { isLoading: isDeleting }] = useDeleteMessageMutation();
+  const [reactToMessage] = useReactToMessageMutation();
 
   // --------------------------------
   // Socket connection
@@ -546,6 +548,7 @@ const Home = () => {
                 isMenuOpen={openMessageMenu === items._id}
                 isReactionOpen={openReactionMessage === items._id}
                 selectedEmoji={selectedReactions[items._id] || null}
+                reactions={items.reactions || []}
                 onToggleMenu={(messageId) =>
                   setOpenMessageMenu(
                     openMessageMenu === messageId ? null : messageId,
@@ -562,6 +565,38 @@ const Home = () => {
                     [messageId]: emoji,
                   }));
                   setOpenReactionMessage(null);
+                  reactToMessage({ messageId, emoji })
+                    .unwrap()
+                    .then((response) => {
+                      const reactions = response?.data?.reactions;
+                      if (!reactions) return;
+                      import("../store").then(({ store }) => {
+                        import("../lib/api").then(({ apiSlice }) => {
+                          store.dispatch(
+                            apiSlice.util.updateQueryData(
+                              "getMessages",
+                              String(perticipentdata.convId),
+                              (cache) => {
+                                const target = cache?.data?.find(
+                                  (item) =>
+                                    String(item._id) === String(messageId),
+                                );
+                                if (target) target.reactions = reactions;
+                              },
+                            ),
+                          );
+                        });
+                      });
+                    })
+                    .catch((reactionError) => {
+                      toast.error(
+                        reactionError?.data?.message ||
+                          reactionError?.error ||
+                          (reactionError?.status === 404
+                            ? "Message not found. Refresh the chat and try again."
+                            : "Could not save reaction"),
+                      );
+                    });
                 }}
                 onDelete={deleteMessageHandler}
               />

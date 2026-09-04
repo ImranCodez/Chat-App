@@ -1,5 +1,54 @@
-import { useEffect, useRef } from "react";
-import { FiSmile } from "react-icons/fi";
+import { useEffect, useRef, useState } from "react";
+import { FiPlus } from "react-icons/fi";
+
+const quickEmojis = ["👍", "❤️", "😂", "😮", "😢"];
+const allEmojis = [
+  ...quickEmojis,
+  "😍",
+  "😘",
+  "🥰",
+  "😎",
+  "🤔",
+  "😅",
+  "😭",
+  "😡",
+  "👏",
+  "🙌",
+  "🙏",
+  "🔥",
+  "🎉",
+  "✅",
+  "❌",
+  "💯",
+  "✨",
+  "💔",
+  "💖",
+  "💪",
+  "👋",
+  "🤝",
+  "👀",
+  "💀",
+  "🤣",
+  "😇",
+  "🤗",
+  "😴",
+  "🤩",
+  "🥳",
+  "😱",
+  "🤯",
+  "😤",
+  "🤍",
+  "🖤",
+  "💙",
+  "💚",
+  "💛",
+  "🧡",
+  "💜",
+  "🌹",
+  "⭐",
+  "☀️",
+  "🌙",
+];
 
 const MessageBubble = ({
   message,
@@ -10,11 +59,19 @@ const MessageBubble = ({
   onToggleMenu,
   onToggleReactions,
   onSelectEmoji,
+  reactions = [],
   onDelete,
 }) => {
   const holdTimer = useRef(null);
+  const [showAllEmojis, setShowAllEmojis] = useState(false);
   const longPressRef = useRef(false);
   const isDeleted = message.isDeletedForEveryone || message.isDeletedForMe;
+  const reactionEmojis = [
+    ...new Set(reactions.map((reaction) => reaction.emoji)),
+  ];
+  if (selectedEmoji && !reactionEmojis.includes(selectedEmoji)) {
+    reactionEmojis.push(selectedEmoji);
+  }
 
   const clearHoldTimer = () => {
     if (holdTimer.current) {
@@ -62,12 +119,12 @@ const MessageBubble = ({
 
       {!isDeleted && isReactionOpen && (
         <div
-          className={`absolute bottom-full z-20 mb-2 flex gap-1 rounded-full border border-border bg-surface p-1 shadow-xl ${
+          className={`absolute bottom-full z-20 mb-4 flex gap-1 rounded-full border border-border bg-surface p-1 shadow-xl ${
             isOwnMessage ? "right-0" : "left-0"
           }`}
           onClick={(event) => event.stopPropagation()}
         >
-          {["👍", "❤️", "😂", "😮", "😢"].map((emoji) => (
+          {(showAllEmojis ? allEmojis : quickEmojis).map((emoji) => (
             <button
               key={emoji}
               type="button"
@@ -81,13 +138,28 @@ const MessageBubble = ({
               {emoji}
             </button>
           ))}
-          <FiSmile className="m-2 text-text-muted" size={15} />
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setShowAllEmojis((current) => !current);
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:bg-muted"
+            aria-label="Show all emojis"
+          >
+            <FiPlus size={17} />
+          </button>
         </div>
       )}
 
-      {selectedEmoji && !isDeleted && (
-        <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-border bg-surface px-1 text-sm align-middle shadow-sm">
-          {selectedEmoji}
+      {!isDeleted && reactionEmojis.length > 0 && (
+        <span className="absolute -bottom-3 left-2 z-10 flex items-center rounded-full border border-border bg-surface px-1.5 text-xs shadow-sm">
+          {reactionEmojis.join(" ")}
+          {reactions.length > 1 && (
+            <span className="ml-1 text-[10px] text-text-muted">
+              {reactions.length}
+            </span>
+          )}
         </span>
       )}
 
