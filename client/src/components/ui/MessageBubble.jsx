@@ -119,7 +119,7 @@ const MessageBubble = ({
 
       {!isDeleted && isReactionOpen && (
         <div
-          className={`absolute bottom-full z-20 mb-4 flex gap-1 rounded-full border border-border bg-surface p-1 shadow-xl ${
+          className={`absolute bottom-full z-20 mb-4 grid max-h-56 w-56 grid-cols-6 gap-1 overflow-y-auto rounded-2xl border border-border bg-surface p-2 shadow-xl ${
             isOwnMessage ? "right-0" : "left-0"
           }`}
           onClick={(event) => event.stopPropagation()}

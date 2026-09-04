@@ -28,6 +28,7 @@ const Home = () => {
   const [messageText, setMessageText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeCall, setActiveCall] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null);
   const [openMessageMenu, setOpenMessageMenu] = useState(null);
   const [openReactionMessage, setOpenReactionMessage] = useState(null);
   const [selectedReactions, setSelectedReactions] = useState({});
@@ -121,6 +122,29 @@ const Home = () => {
     return () => {
       socket.off("typing", handleTyping);
       socket.off("stop_typing", handleStopTyping);
+    };
+  }, [perticipentdata?.convId]);
+
+  useEffect(() => {
+    const socket = initsocket();
+    const handleIncomingCall = ({ conversationId, type }) => {
+      if (String(conversationId) === String(perticipentdata?.convId)) {
+        setIncomingCall(type);
+      }
+    };
+    const handleCallEnded = ({ conversationId }) => {
+      if (String(conversationId) === String(perticipentdata?.convId)) {
+        setIncomingCall(null);
+        setActiveCall(null);
+      }
+    };
+
+    socket.on("call_started", handleIncomingCall);
+    socket.on("call_ended", handleCallEnded);
+
+    return () => {
+      socket.off("call_started", handleIncomingCall);
+      socket.off("call_ended", handleCallEnded);
     };
   }, [perticipentdata?.convId]);
 
@@ -336,6 +360,7 @@ const Home = () => {
       conversationId: perticipentdata.convId,
     });
     setActiveCall(null);
+    setIncomingCall(null);
   };
 
   // --------------------------------
@@ -507,6 +532,38 @@ const Home = () => {
           >
             <FiX size={18} />
           </button>
+        </div>
+      )}
+
+      {incomingCall && !activeCall && (
+        <div className="relative z-10 flex shrink-0 items-center justify-between border-b border-online/30 bg-online/10 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-text-primary">
+              Incoming {incomingCall} call
+            </p>
+            <p className="text-xs text-text-secondary">
+              {perticipentdata.fullname} is calling you
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setIncomingCall(null)}
+              className="rounded-lg bg-error px-3 py-2 text-xs font-semibold text-white"
+            >
+              Decline
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCall(incomingCall);
+                setIncomingCall(null);
+              }}
+              className="rounded-lg bg-online px-3 py-2 text-xs font-semibold text-bg"
+            >
+              Accept
+            </button>
+          </div>
         </div>
       )}
 

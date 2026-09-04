@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { useLogginMutation } from "../lib/api";
-import  {Link}  from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FiLoader } from "react-icons/fi";
 const Login = () => {
   const navigator = useNavigate();
   const [longindata, setlogindata] = useState({
     email: "",
     password: "",
   });
-  const [loginuser, myerror] = useLogginMutation();
+  const [loginuser, { isLoading: isLoggingIn }] = useLogginMutation();
   const [errors, seterrors] = useState({
     email: "",
     password: "",
@@ -17,6 +18,8 @@ const Login = () => {
 
   const loghandlesub = async (e) => {
     e.preventDefault();
+
+    if (isLoggingIn) return;
 
     seterrors({
       email: "",
@@ -44,9 +47,7 @@ const Login = () => {
         autoClose: 3000,
       });
 
-      setTimeout(() => {
-        navigator("/");
-      }, 4000);
+      navigator("/", { replace: true });
       setlogindata({
         email: "",
         password: "",
@@ -167,7 +168,7 @@ const Login = () => {
               <p className="mt-4 text-sm text-text-secondary">
                 Don't have an account?{" "}
                 <Link
-                  to="/Singup"
+                  to="/Signup"
                   className="font-semibold text-accent transition hover:text-accent-glow"
                 >
                   Signup
@@ -176,10 +177,18 @@ const Login = () => {
             </div>
 
             <button
+              disabled={isLoggingIn}
               className="mt-6 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand/20 transition hover:bg-brand-light focus:outline-none focus:ring-2 focus:ring-accent/40"
               type="submit"
             >
-              Login
+              {isLoggingIn ? (
+                <span className="flex items-center justify-center gap-2">
+                  <FiLoader className="animate-spin" size={16} />
+                  Logging in...
+                </span>
+              ) : (
+                "Login"
+              )}
             </button>
           </form>
         </div>

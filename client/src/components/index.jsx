@@ -16,7 +16,7 @@ const Layout = () => {
   }
 
   if (!data) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/Signup" replace />;
   }
 
   return (
