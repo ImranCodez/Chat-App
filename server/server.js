@@ -4,6 +4,7 @@ const route = require("./routes");
 const cors = require("cors");
 const joinRoom = require("./helpers/Join_room");
 const dbcongfig = require("./dbconfig");
+const { verifyToken } = require("./helpers/token");
 const cookieParser = require("cookie-parser");
 const app = express();
 const { createServer } = require("http");
@@ -27,7 +28,19 @@ const io = require("socket.io")(httpServer, {
 
 global.io = io;
 
-dbcongfig();
+io.use((socket, next) => {
+  const cookieHeader = socket.handshake.headers.cookie || "";
+  const accessToken = cookieHeader
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith("accessToken="))
+    ?.split("=")[1];
+  const decoded = accessToken && verifyToken(accessToken);
+
+  if (!decoded?.id) return next(new Error("Unauthorized socket"));
+  socket.data.userId = decoded.id;
+  next();
+});
 
 // Middleware
 app.use(cookieParser());
@@ -49,22 +62,23 @@ io.on("connection", (socket) => {
   joinRoom(socket);
 
   socket.on("typing", ({ conversationId }) => {
-    if (!conversationId) return;
+    if (!conversationId || !socket.rooms.has(String(conversationId))) return;
     socket.to(conversationId).emit("typing", { conversationId });
   });
 
   socket.on("stop_typing", ({ conversationId }) => {
-    if (!conversationId) return;
+    if (!conversationId || !socket.rooms.has(String(conversationId))) return;
     socket.to(conversationId).emit("stop_typing", { conversationId });
   });
 
   socket.on("call_started", ({ conversationId, type }) => {
-    if (!conversationId || !type) return;
+    if (!conversationId || !type || !socket.rooms.has(String(conversationId)))
+      return;
     socket.to(conversationId).emit("call_started", { conversationId, type });
   });
 
   socket.on("call_ended", ({ conversationId }) => {
-    if (!conversationId) return;
+    if (!conversationId || !socket.rooms.has(String(conversationId))) return;
     socket.to(conversationId).emit("call_ended", { conversationId });
   });
 });
@@ -78,6 +92,16 @@ const dns = require("node:dns/promises");
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 // Server
-httpServer.listen(8000, () => {
-  console.log("Server is running on port ");
-});
+const startServer = async () => {
+  try {
+    await dbcongfig();
+    httpServer.listen(8000, () => {
+      console.log("Server is running on port 8000");
+    });
+  } catch (error) {
+    console.error("Database connection failed", error);
+    process.exit(1);
+  }
+};
+
+startServer();

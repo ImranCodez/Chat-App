@@ -4,18 +4,15 @@ const { verifyToken } = require("../helpers/token");
 const authMiddleware = (req, res, next) => {
   try {
     const token = req.cookies.accessToken;
-    console.log(token);
     if (!token) return sendResponse(res, 401, "Access token required");
 
     const decoded = verifyToken(token);
-    console.log(decoded);
 
     if (!decoded) return sendResponse(res, 401, "Access token expired");
     req.user = decoded;
     next();
   } catch (error) {
     sendResponse(res, 401, "Invalid access token");
-    console.log(error);
   }
 };
 module.exports = { authMiddleware };

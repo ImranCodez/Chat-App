@@ -1,23 +1,21 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const sendResponse = require("../helpers/responsehandler");
 
 const userAuthSchema = new mongoose.Schema(
-  { fullname:{
-    type:String,
-    required:true,
-  },
+  {
+    fullname: {
+      type: String,
+      required: true,
+    },
     email: {
       type: String,
       required: true,
       unique: true,
-    
     },
     password: {
       type: String,
       required: true,
     },
-   
   },
   { timestamps: true },
 );
@@ -29,9 +27,10 @@ userAuthSchema.pre("save", async function (next) {
 
   try {
     user.password = await bcrypt.hash(user.password, 10);
-  } catch (err) {
-    sendResponse(res, 500, "Internal server error");
+  } catch (error) {
+    return next(error);
   }
+  next();
 });
 
 // 🔑 Compare password method.../

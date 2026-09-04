@@ -1,5 +1,14 @@
+const { findUserConversation } = require("./conversationAccess");
+
 const joinRoom = (socket) => {
-  socket.on("join_room", (convoId) => {socket.join(convoId);});
+  socket.on("join_room", async (convoId) => {
+    if (!convoId || !socket.data.userId) return;
+    const conversation = await findUserConversation(
+      convoId,
+      socket.data.userId,
+    );
+    if (conversation) socket.join(String(convoId));
+  });
 };
 
 module.exports = joinRoom;
@@ -16,4 +25,4 @@ module.exports = joinRoom;
 //   ↓
 // conversationId পাওয়া গেল
 //   ↓
-// socket.join(conversationId)  
+// socket.join(conversationId)

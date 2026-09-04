@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ConversationItems from "./ui/ConversationItems";
 import { toast } from "react-toastify";
-import { useAddFriendMutation, useGetConversationQuery } from "../lib/api";
+import {
+  useAddFriendMutation,
+  useGetConversationQuery,
+  useLogoutMutation,
+} from "../lib/api";
 import { FiMessageCircle, FiPlus, FiX, FiLogOut } from "react-icons/fi";
 import { initsocket } from "../lib/socketApi";
 
 const SideNavbar = ({ Userprofile }) => {
+  const navigate = useNavigate();
   const { data, isFetching } = useGetConversationQuery();
   const [isAddingFriend, setIsAddingFriend] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [logout, { isLoading: isLoggingOut }] = useLogoutMutation();
 
   useEffect(() => {
     if (!data?.data) return;
@@ -190,12 +198,67 @@ const SideNavbar = ({ Userprofile }) => {
 
         <button
           type="button"
+          onClick={() => setShowLogoutModal(true)}
           className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2 text-sm text-text-muted transition hover:bg-muted hover:text-error"
         >
           <FiLogOut size={15} />
           Log out
         </button>
       </div>
+
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-5"
+          role="presentation"
+          onClick={() => {
+            if (!isLoggingOut) setShowLogoutModal(false);
+          }}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-border bg-surface p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2
+              id="logout-title"
+              className="text-lg font-semibold text-text-primary"
+            >
+              Do you want to log out?
+            </h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              You can log in again whenever you want.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={() => setShowLogoutModal(false)}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text-secondary hover:bg-muted disabled:opacity-50"
+              >
+                No
+              </button>
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={async () => {
+                  try {
+                    await logout().unwrap();
+                    setShowLogoutModal(false);
+                    navigate("/Login", { replace: true });
+                  } catch (error) {
+                    toast.error(error?.data?.message || "Could not log out");
+                  }
+                }}
+                className="rounded-lg bg-error px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {isLoggingOut ? "Logging out..." : "Yes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };

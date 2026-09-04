@@ -2,6 +2,7 @@ const sendResponse = require("../helpers/responsehandler");
 const conversationSchema = require("../models/conversationSchema");
 const messaegesSchema = require("../models/messaegesSchema");
 const userSchema = require("../models/userSchema");
+const { findUserConversation } = require("../helpers/conversationAccess");
 const addFriend = async (req, res) => {
   try {
     const { email } = req.body;
@@ -62,9 +63,10 @@ const Sendmessage = async (req, res) => {
     }
 
     // 2. Check conversation
-    const existingConversation =
-      await conversationSchema.findById(conversation);
-    console.log(existingConversation);
+    const existingConversation = await findUserConversation(
+      conversation,
+      req.user.id,
+    );
     if (!existingConversation) {
       return sendResponse(res, 404, "conversation not found");
     }
@@ -96,6 +98,12 @@ const messageGet = async (req, res) => {
   try {
     const { conversation } = req.params;
     if (!conversation) return sendResponse(res, 400, " conversation not found");
+    const existingConversation = await findUserConversation(
+      conversation,
+      req.user.id,
+    );
+    if (!existingConversation)
+      return sendResponse(res, 403, "conversation not found");
     const message = await messaegesSchema.find({ conversation });
     const visibleMessages = message.map((item) => {
       const messageData = item.toObject();
@@ -124,10 +132,10 @@ const deleteMessage = async (req, res) => {
     const message = await messaegesSchema.findById(messageId);
 
     if (!message) return sendResponse(res, 404, "message not found");
-    const conversation = await conversationSchema.findOne({
-      _id: message.conversation,
-      $or: [{ creator: req.user.id }, { participent: req.user.id }],
-    });
+    const conversation = await findUserConversation(
+      message.conversation,
+      req.user.id,
+    );
 
     if (!conversation) return sendResponse(res, 403, "conversation not found");
 
@@ -200,10 +208,10 @@ const reactToMessage = async (req, res) => {
     const message = await messaegesSchema.findById(messageId);
     if (!message) return sendResponse(res, 404, "message not found");
 
-    const conversation = await conversationSchema.findOne({
-      _id: message.conversation,
-      $or: [{ creator: req.user.id }, { participent: req.user.id }],
-    });
+    const conversation = await findUserConversation(
+      message.conversation,
+      req.user.id,
+    );
     if (!conversation) return sendResponse(res, 403, "conversation not found");
 
     if (!Array.isArray(message.reactions)) message.reactions = [];

@@ -69,6 +69,12 @@ export const apiSlice = createApi({
         body: signupdata,
       }),
     }),
+    logout: build.mutation({
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+      }),
+    }),
     getprofile: build.query({
       query: () => "/auth/profile",
     }),
@@ -183,6 +189,7 @@ export const {
   useGetConversationQuery,
   useLogginMutation,
   useSignupMutation,
+  useLogoutMutation,
   useGetprofileQuery,
   useLazyGetMessagesQuery,
   useReactToMessageMutation,
