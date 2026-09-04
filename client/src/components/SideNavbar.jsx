@@ -64,9 +64,9 @@ const SideNavbar = ({ Userprofile }) => {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-brand/20">
             <FiMessageCircle size={18} />
           </span>
-          <span className="text-blue-600 ml-1 mr-1 ">
+          {/* <span className="text-blue-600 ml-1 mr-1 ">
             M<span className="text-red-600 font-bold">❤</span>I
-          </span>
+          </span> */}
           ChatApp
         </Link>
 
