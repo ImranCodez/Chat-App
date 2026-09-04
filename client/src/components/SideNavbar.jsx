@@ -54,7 +54,7 @@ const SideNavbar = ({ Userprofile }) => {
   };
 
   return (
-    <aside  className="flex h-screen max-lg:h-dvh w-full max-w-70 max-lg:max-w-none shrink-0 flex-col overflow-hidden border-r border-border bg-surface px-4 py-5 max-lg:px-2 max-lg:py-3">
+    <aside className="flex h-screen max-lg:h-dvh w-full max-w-70 max-lg:max-w-none shrink-0 flex-col overflow-hidden border-r border-border bg-surface px-4 py-5 max-lg:px-2 max-lg:py-3">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between px-2">
         <Link
@@ -64,10 +64,10 @@ const SideNavbar = ({ Userprofile }) => {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white shadow-lg shadow-brand/20">
             <FiMessageCircle size={18} />
           </span>
-          <span className="max-lg:hidden text-blue-600 ml-1 mr-1 ">
+          <span className="text-blue-600 ml-1 mr-1 ">
             M<span className="text-red-600 font-bold">❤</span>I
           </span>
-          <span className="max-lg:hidden">ChatApp</span>
+          ChatApp
         </Link>
 
         <button
@@ -157,9 +157,9 @@ const SideNavbar = ({ Userprofile }) => {
       </div>
 
       {/* Current User */}
-      <div className="mt-5 border-t border-border pt-4 max-lg:mt-3 max-lg:pt-3">
-        <div className="mb-3 flex items-center gap-3 rounded-xl bg-muted/60 p-3 max-lg:gap-2 max-lg:p-2">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold  text-accent max-lg:h-8 max-lg:w-8 max-lg:text-sm">
+      <div className="mt-5 border-t border-border pt-4">
+        <div className="mb-3 flex items-center gap-3 rounded-xl bg-muted/60 p-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold  text-accent">
             {Userprofile?.data?.fullname?.charAt(0)?.toUpperCase() || "U"}
           </div>
 
@@ -196,7 +196,7 @@ const SideNavbar = ({ Userprofile }) => {
           Log out
         </button>
       </div>
-    </>
+    </aside>
   );
 };
 
