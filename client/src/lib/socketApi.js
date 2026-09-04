@@ -58,6 +58,34 @@ const initsocket = () => {
       }),
     );
   });
+
+  socket.on(
+    "message_deleted",
+    ({ messageId, conversationId, lastmessage, message }) => {
+      store.dispatch(
+        apiSlice.util.updateQueryData(
+          "getMessages",
+          conversationId,
+          (cache) => {
+            if (!cache?.data) return;
+            const target = cache.data.find(
+              (item) => String(item._id) === String(messageId),
+            );
+            if (target && message) Object.assign(target, message);
+          },
+        ),
+      );
+
+      store.dispatch(
+        apiSlice.util.updateQueryData("getConversation", undefined, (cache) => {
+          const conversation = cache?.data?.find(
+            (item) => String(item._id) === String(conversationId),
+          );
+          if (conversation) conversation.lastmessage = lastmessage;
+        }),
+      );
+    },
+  );
   socket.on("connect_error", (error) => {
     console.log("❌ Socket connection error:", error.message);
   });

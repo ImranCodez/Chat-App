@@ -8,18 +8,16 @@ const generateAccsToken = (user) => {
     {
       id: user._id,
       email: user.email,
-   
     },
     process.env.JWT_SECRET,
-    { expiresIn: "3h" },
+    { expiresIn: "40m" },
   );
 };
 const generateRefToken = (user) => {
   return jwt.sign(
-    { 
+    {
       user: user._id,
       email: user.email,
-    
     },
 
     process.env.JWT_SECRET,
@@ -29,8 +27,11 @@ const generateRefToken = (user) => {
 const resetpassToken = () => {
   const resetToken = crypto.randomBytes(16).toString("hex");
 
-  const resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
   return { resetPasswordToken, resetToken };
   // return Buffer.from(`${JSON.stringify(kisu_aktadeo)}`).toString("base64");
 };

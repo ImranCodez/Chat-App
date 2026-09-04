@@ -1,5 +1,9 @@
 const sendResponse = require("../helpers/responsehandler");
-const { generateAccsToken, generateRefToken } = require("../helpers/token");
+const {
+  generateAccsToken,
+  generateRefToken,
+  verifyToken,
+} = require("../helpers/token");
 const userAuthSchema = require("../models/userSchema");
 // ...........signup part...//
 const signupuser = async (req, res) => {
@@ -80,8 +84,37 @@ const getprofile = async (req, res) => {
     sendResponse(res, 500, "Internal server error");
   }
 };
+
+const refreshAccessToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies["x-Xreftoken"];
+    if (!refreshToken) return sendResponse(res, 401, "Refresh token not found");
+
+    const decoded = verifyToken(refreshToken);
+    if (!decoded?.user) return sendResponse(res, 401, "Invalid refresh token");
+
+    const user = await userAuthSchema
+      .findById(decoded.user)
+      .select("_id email");
+    if (!user) return sendResponse(res, 401, "User not found");
+
+    const accessToken = generateAccsToken(user);
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 40,
+      secure: true,
+      sameSite: "none",
+    });
+
+    return sendResponse(res, 200, "Access token refreshed", true);
+  } catch (error) {
+    console.log(error);
+    return sendResponse(res, 401, "Could not refresh access token");
+  }
+};
 module.exports = {
   signupuser,
   signinuser,
   getprofile,
+  refreshAccessToken,
 };

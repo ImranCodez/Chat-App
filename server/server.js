@@ -57,6 +57,16 @@ io.on("connection", (socket) => {
     if (!conversationId) return;
     socket.to(conversationId).emit("stop_typing", { conversationId });
   });
+
+  socket.on("call_started", ({ conversationId, type }) => {
+    if (!conversationId || !type) return;
+    socket.to(conversationId).emit("call_started", { conversationId, type });
+  });
+
+  socket.on("call_ended", ({ conversationId }) => {
+    if (!conversationId) return;
+    socket.to(conversationId).emit("call_ended", { conversationId });
+  });
 });
 
 // Routes

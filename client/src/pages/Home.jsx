@@ -1,15 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { activeConversation } from "../slices/activeConvslice";
-import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
+import MessageBubble from "../components/ui/MessageBubble";
+import {
+  useDeleteMessageMutation,
+  useGetprofileQuery,
+  useLazyGetMessagesQuery,
+  useSendMessageMutation,
+} from "../lib/api";
 import { toast } from "react-toastify";
 
 import {
   FiArrowLeft,
+  FiPhone,
   FiMessageCircle,
   FiMoreVertical,
   FiPaperclip,
   FiSend,
+  FiVideo,
+  FiX,
 } from "react-icons/fi";
 
 import { initsocket } from "../lib/socketApi";
@@ -17,6 +26,10 @@ import { initsocket } from "../lib/socketApi";
 const Home = () => {
   const [messageText, setMessageText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [activeCall, setActiveCall] = useState(null);
+  const [openMessageMenu, setOpenMessageMenu] = useState(null);
+  const [openReactionMessage, setOpenReactionMessage] = useState(null);
+  const [selectedReactions, setSelectedReactions] = useState({});
   const dispatch = useDispatch();
 
   // Typing timeout
@@ -30,8 +43,9 @@ const Home = () => {
   // --------------------------------
 
   const perticipentdata = useSelector((state) => state.activeconv.active);
+  const { data: profileData } = useGetprofileQuery();
 
-  const currentUserId = perticipentdata?._id;
+  const currentUserId = profileData?.data?._id;
 
   // --------------------------------
   // Get messages
@@ -45,6 +59,7 @@ const Home = () => {
   // --------------------------------
 
   const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+  const [deleteMessage, { isLoading: isDeleting }] = useDeleteMessageMutation();
 
   // --------------------------------
   // Socket connection
@@ -54,6 +69,9 @@ const Home = () => {
     initsocket();
   }, []);
 
+  // --------------------------------
+  // Get messages when conversation changes
+  // --------------------------------
   // --------------------------------
   // Get messages when conversation changes
   // --------------------------------
@@ -262,10 +280,61 @@ const Home = () => {
     }
   };
 
-  const deletemessagehanlder=()=>(
+  const deleteMessageHandler = async (messageId, mode) => {
+    if (!messageId || isDeleting) return;
 
-    console.log("hea delete hove")
-  )
+    try {
+      const response = await deleteMessage({ messageId, mode }).unwrap();
+      const conversationId = String(perticipentdata.convId);
+      import("../store").then(({ store }) => {
+        import("../lib/api").then(({ apiSlice }) => {
+          store.dispatch(
+            apiSlice.util.updateQueryData(
+              "getMessages",
+              conversationId,
+              (cache) => {
+                if (!cache?.data) return;
+                const target = cache.data.find(
+                  (item) => String(item._id) === String(messageId),
+                );
+                if (target && response?.data?.message) {
+                  Object.assign(target, response.data.message);
+                }
+              },
+            ),
+          );
+        });
+      });
+      setOpenMessageMenu(null);
+      setOpenReactionMessage(null);
+      setSelectedReactions((current) => {
+        const next = { ...current };
+        delete next[messageId];
+        return next;
+      });
+    } catch (deleteError) {
+      toast.error(
+        deleteError?.data?.message ||
+          deleteError?.error ||
+          "Message could not be deleted",
+      );
+    }
+  };
+
+  const startCall = (type) => {
+    setActiveCall(type);
+    initsocket().emit("call_started", {
+      conversationId: perticipentdata.convId,
+      type,
+    });
+  };
+
+  const endCall = () => {
+    initsocket().emit("call_ended", {
+      conversationId: perticipentdata.convId,
+    });
+    setActiveCall(null);
+  };
 
   // --------------------------------
   // No active conversation
@@ -384,14 +453,60 @@ const Home = () => {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-muted hover:text-text-primary"
-          aria-label="Conversation options"
-        >
-          <FiMoreVertical size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => startCall("audio")}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-muted hover:text-online"
+            aria-label="Start audio call"
+          >
+            <FiPhone size={17} />
+          </button>
+          <button
+            type="button"
+            onClick={() => startCall("video")}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-muted hover:text-accent"
+            aria-label="Start video call"
+          >
+            <FiVideo size={18} />
+          </button>
+          <button
+            type="button"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition hover:bg-muted hover:text-text-primary"
+            aria-label="Conversation options"
+          >
+            <FiMoreVertical size={18} />
+          </button>
+        </div>
       </div>
+
+      {activeCall && (
+        <div className="relative z-10 flex shrink-0 items-center justify-between border-b border-brand/30 bg-brand/10 px-4 py-3">
+          <div className="flex items-center gap-3">
+            {activeCall === "video" ? (
+              <FiVideo size={18} />
+            ) : (
+              <FiPhone size={18} />
+            )}
+            <div>
+              <p className="text-sm font-semibold text-text-primary">
+                {activeCall === "video" ? "Video" : "Audio"} call
+              </p>
+              <p className="text-xs text-text-secondary">
+                Calling {perticipentdata.fullname}...
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={endCall}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-error text-white transition hover:opacity-80"
+            aria-label="End call"
+          >
+            <FiX size={18} />
+          </button>
+        </div>
+      )}
 
       <div
         ref={chatDisplayRef}
@@ -423,22 +538,33 @@ const Home = () => {
 
             const isOwnMessage = String(senderId) === String(currentUserId);
 
-            return isOwnMessage ? (
-              <div
-                 onClick={deletemessagehanlder}
+            return (
+              <MessageBubble
                 key={items._id || items.content}
-                className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary wrap-anywhere [animation-delay:120ms]"
-              >
-                {items.content}
-              </div>
-            ) : (
-              <div
-                onClick={deletemessagehanlder}
-                key={items._id || items.content}
-                className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10 wrap-anywhere"
-              >
-                {items.content}
-              </div>
+                message={items}
+                isOwnMessage={isOwnMessage}
+                isMenuOpen={openMessageMenu === items._id}
+                isReactionOpen={openReactionMessage === items._id}
+                selectedEmoji={selectedReactions[items._id] || null}
+                onToggleMenu={(messageId) =>
+                  setOpenMessageMenu(
+                    openMessageMenu === messageId ? null : messageId,
+                  )
+                }
+                onToggleReactions={(messageId) =>
+                  setOpenReactionMessage(
+                    openReactionMessage === messageId ? null : messageId,
+                  )
+                }
+                onSelectEmoji={(messageId, emoji) => {
+                  setSelectedReactions((current) => ({
+                    ...current,
+                    [messageId]: emoji,
+                  }));
+                  setOpenReactionMessage(null);
+                }}
+                onDelete={deleteMessageHandler}
+              />
             );
           })}
 

@@ -97,11 +97,104 @@ const messageGet = async (req, res) => {
     const { conversation } = req.params;
     if (!conversation) return sendResponse(res, 400, " conversation not found");
     const message = await messaegesSchema.find({ conversation });
-    sendResponse(res, 200, "", true, message);
+    const visibleMessages = message.map((item) => {
+      const messageData = item.toObject();
+      const deletedForCurrentUser =
+        Array.isArray(item.deletedFor) &&
+        item.deletedFor.some(
+          (userId) => String(userId) === String(req.user.id),
+        );
+      if (item.isDeletedForEveryone || deletedForCurrentUser) {
+        messageData.content = "This message was deleted";
+        messageData.isDeletedForMe = !item.isDeletedForEveryone;
+      }
+      return messageData;
+    });
+    sendResponse(res, 200, "", true, visibleMessages);
   } catch (error) {
     sendResponse(res, 500, "Internal server error");
     console.log(error);
   }
 };
 
-module.exports = { addFriend, conversation, Sendmessage, messageGet };
+const deleteMessage = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const mode = req.query.mode || req.body?.mode || "me";
+    const message = await messaegesSchema.findById(messageId);
+
+    if (!message) return sendResponse(res, 404, "message not found");
+    const conversation = await conversationSchema.findOne({
+      _id: message.conversation,
+      $or: [{ creator: req.user.id }, { participent: req.user.id }],
+    });
+
+    if (!conversation) return sendResponse(res, 403, "conversation not found");
+
+    if (!["me", "everyone"].includes(mode)) {
+      return sendResponse(res, 400, "invalid delete mode");
+    }
+
+    if (mode === "everyone") {
+      if (String(message.sender) !== String(req.user.id)) {
+        return sendResponse(
+          res,
+          403,
+          "you can only delete your own messages for everyone",
+        );
+      }
+      message.isDeletedForEveryone = true;
+      message.content = "This message was deleted";
+    } else if (
+      !Array.isArray(message.deletedFor) ||
+      !message.deletedFor.some(
+        (userId) => String(userId) === String(req.user.id),
+      )
+    ) {
+      if (!Array.isArray(message.deletedFor)) message.deletedFor = [];
+      message.deletedFor.push(req.user.id);
+    }
+
+    await message.save();
+
+    if (mode === "everyone") {
+      const latestMessage = await messaegesSchema
+        .findOne({ conversation: message.conversation })
+        .sort({ createdAt: -1 });
+      conversation.lastmessage = latestMessage?.content || "null";
+      await conversation.save();
+    }
+
+    if (mode === "everyone") {
+      global.io.to(String(message.conversation)).emit("message_deleted", {
+        messageId,
+        conversationId: String(message.conversation),
+        lastmessage: conversation.lastmessage,
+        mode,
+        message,
+      });
+    }
+
+    const responseMessage = message.toObject();
+    if (mode === "me") {
+      responseMessage.content = "This message was deleted";
+      responseMessage.isDeletedForMe = true;
+    }
+
+    return sendResponse(res, 200, "message deleted", true, {
+      message: responseMessage,
+      mode,
+    });
+  } catch (error) {
+    console.log(error);
+    return sendResponse(res, 500, "Internal server error");
+  }
+};
+
+module.exports = {
+  addFriend,
+  conversation,
+  Sendmessage,
+  messageGet,
+  deleteMessage,
+};

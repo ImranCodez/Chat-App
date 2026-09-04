@@ -20,5 +20,13 @@ const messages = new mongoose.Schema({
     ref: "convschema",
     required: true,
   },
-});
+  deletedFor: [{
+    type: mongoose.Types.ObjectId,
+    ref: "user",
+  }],
+  isDeletedForEveryone: {
+    type: Boolean,
+    default: false,
+  },
+}, { timestamps: true });
 module.exports=mongoose.model("messages",messages)

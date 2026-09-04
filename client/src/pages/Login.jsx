@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLogginMutation } from "../lib/api";
-import { Link } from "react-router-dom";
+import  {Link}  from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 const Login = () => {
