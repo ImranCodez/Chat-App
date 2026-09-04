@@ -1,9 +1,11 @@
 import React from "react";
 import SideNavbar from "../components/SideNavbar";
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useGetprofileQuery } from "../lib/api";
 const Layout = () => {
   const { data, isLoading } = useGetprofileQuery();
+  const activeConversation = useSelector((state) => state.activeconv.active);
 
   if (isLoading) {
     return (
@@ -19,8 +21,18 @@ const Layout = () => {
 
   return (
     <div className="flex h-screen max-lg:h-dvh overflow-hidden bg-bg">
-      <SideNavbar Userprofile={data} />
-      <main className="min-w-0 flex-1 overflow-hidden">
+      <div
+        className={
+          activeConversation ? "max-lg:hidden" : "max-lg:flex max-lg:w-full"
+        }
+      >
+        <SideNavbar Userprofile={data} />
+      </div>
+      <main
+        className={`min-w-0 flex-1 overflow-hidden max-lg:w-full ${
+          activeConversation ? "" : "max-lg:hidden"
+        }`}
+      >
         <Outlet />
       </main>
     </div>

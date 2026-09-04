@@ -1,9 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { activeConversation } from "../slices/activeConvslice";
 import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
 import { toast } from "react-toastify";
 
 import {
+  FiArrowLeft,
   FiMessageCircle,
   FiMoreVertical,
   FiPaperclip,
@@ -15,6 +17,7 @@ import { initsocket } from "../lib/socketApi";
 const Home = () => {
   const [messageText, setMessageText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const dispatch = useDispatch();
 
   // Typing timeout
   const typingTimeoutRef = useRef(null);
@@ -352,6 +355,15 @@ const Home = () => {
 
       <div className="chat-enter relative flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-6 py-4 max-lg:px-3 max-lg:py-3 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => dispatch(activeConversation(null))}
+            className="hidden max-lg:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-muted transition hover:bg-muted hover:text-text-primary"
+            aria-label="Back to conversations"
+          >
+            <FiArrowLeft size={18} />
+          </button>
+
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
             {perticipentdata.fullname?.charAt(0)?.toUpperCase() || "U"}
           </div>
@@ -375,10 +387,6 @@ const Home = () => {
           <FiMoreVertical size={18} />
         </button>
       </div>
-
-      {/* --------------------------------
-          Messages
-      -------------------------------- */}
 
       <div
         ref={chatDisplayRef}
@@ -413,14 +421,14 @@ const Home = () => {
             return isOwnMessage ? (
               <div
                 key={items._id || items.content}
-                className="message-enter chat-message max-w-[min(75%,28rem)] self-start break-words rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [overflow-wrap:anywhere] [animation-delay:120ms]"
+                className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary wrap-anywhere [animation-delay:120ms]"
               >
                 {items.content}
               </div>
             ) : (
               <div
                 key={items._id || items.content}
-                className="message-enter chat-message max-w-[min(75%,28rem)] self-end break-words rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10 [overflow-wrap:anywhere]"
+                className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10 wrap-anywhere"
               >
                 {items.content}
               </div>
