@@ -262,6 +262,11 @@ const Home = () => {
     }
   };
 
+  const deletemessagehanlder=()=>(
+
+    console.log("hea delete hove")
+  )
+
   // --------------------------------
   // No active conversation
   // --------------------------------
@@ -420,6 +425,7 @@ const Home = () => {
 
             return isOwnMessage ? (
               <div
+                 onClick={deletemessagehanlder}
                 key={items._id || items.content}
                 className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary wrap-anywhere [animation-delay:120ms]"
               >
@@ -427,6 +433,7 @@ const Home = () => {
               </div>
             ) : (
               <div
+                onClick={deletemessagehanlder}
                 key={items._id || items.content}
                 className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10 wrap-anywhere"
               >

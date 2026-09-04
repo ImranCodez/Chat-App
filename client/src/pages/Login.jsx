@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLogginMutation } from "../lib/api";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 const Login = () => {
@@ -165,12 +166,12 @@ const Login = () => {
 
               <p className="mt-4 text-sm text-text-secondary">
                 Don't have an account?{" "}
-                <a
+                <Link
+                  to="/Singup"
                   className="font-semibold text-accent transition hover:text-accent-glow"
-                  href="/Singup"
                 >
                   Signup
-                </a>
+                </Link>
               </p>
             </div>
 

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSignupMutation } from "../lib/api";
+import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 const Signup = () => {
   const nvaigator = useNavigate();
@@ -212,12 +213,12 @@ const Signup = () => {
 
               <p className="mt-4 text-sm text-text-secondary">
                 Already have an account?{" "}
-                <a
+               <Link
+                  to="/Login"
                   className="font-semibold text-accent transition hover:text-accent-glow"
-                  href="/Login"
                 >
                   Login
-                </a>
+                </Link>
               </p>
             </div>
 
