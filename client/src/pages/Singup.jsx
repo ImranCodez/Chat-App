@@ -61,7 +61,7 @@ const Signup = () => {
         email: "",
         password: "",
       });
-      nvaigator("/login");
+      nvaigator("/Login");
       // =========================================
       // পুরোনো error message-ও clear করে দিবে
       // =========================================

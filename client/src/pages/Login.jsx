@@ -167,7 +167,7 @@ const Login = () => {
                 Don't have an account?{" "}
                 <a
                   className="font-semibold text-accent transition hover:text-accent-glow"
-                  href="/signup"
+                  href="/Singup"
                 >
                   Signup
                 </a>

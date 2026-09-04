@@ -54,7 +54,7 @@ const SideNavbar = ({ Userprofile }) => {
   };
 
   return (
-    <aside className="flex h-screen max-lg:h-dvh w-full max-w-[280px] max-lg:w-[38vw] max-lg:max-w-none shrink-0 flex-col overflow-hidden border-r border-border bg-surface px-4 py-5 max-lg:px-2 max-lg:py-3">
+    <aside  className="flex h-screen max-lg:h-dvh w-full max-w-70 max-lg:max-w-none shrink-0 flex-col overflow-hidden border-r border-border bg-surface px-4 py-5 max-lg:px-2 max-lg:py-3">
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between px-2">
         <Link
@@ -196,7 +196,7 @@ const SideNavbar = ({ Userprofile }) => {
           Log out
         </button>
       </div>
-    </aside>
+    </>
   );
 };
 
