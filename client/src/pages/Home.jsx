@@ -1,10 +1,6 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import {
-  useLazyGetMessagesQuery,
-  useSendMessageMutation,
-} from "../lib/api";
+import { useLazyGetMessagesQuery, useSendMessageMutation } from "../lib/api";
 import { toast } from "react-toastify";
 
 import {
@@ -30,9 +26,7 @@ const Home = () => {
   // Active conversation
   // --------------------------------
 
-  const perticipentdata = useSelector(
-    (state) => state.activeconv.active
-  );
+  const perticipentdata = useSelector((state) => state.activeconv.active);
 
   const currentUserId = perticipentdata?._id;
 
@@ -40,17 +34,14 @@ const Home = () => {
   // Get messages
   // --------------------------------
 
-  const [
-    triggermessage,
-    { data = [], isLoading, error },
-  ] = useLazyGetMessagesQuery();
+  const [triggermessage, { data = [], isLoading, error }] =
+    useLazyGetMessagesQuery();
 
   // --------------------------------
   // Send message
   // --------------------------------
 
-  const [sendMessage, { isLoading: isSending }] =
-    useSendMessageMutation();
+  const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
   // --------------------------------
   // Socket connection
@@ -77,8 +68,7 @@ const Home = () => {
   useEffect(() => {
     if (!chatDisplayRef.current) return;
 
-    chatDisplayRef.current.scrollTop =
-      chatDisplayRef.current.scrollHeight;
+    chatDisplayRef.current.scrollTop = chatDisplayRef.current.scrollHeight;
   }, [data?.data, isTyping]);
 
   // --------------------------------
@@ -91,19 +81,13 @@ const Home = () => {
     if (!perticipentdata?.convId) return;
 
     const handleTyping = ({ conversationId }) => {
-      if (
-        String(conversationId) ===
-        String(perticipentdata.convId)
-      ) {
+      if (String(conversationId) === String(perticipentdata.convId)) {
         setIsTyping(true);
       }
     };
 
     const handleStopTyping = ({ conversationId }) => {
-      if (
-        String(conversationId) ===
-        String(perticipentdata.convId)
-      ) {
+      if (String(conversationId) === String(perticipentdata.convId)) {
         setIsTyping(false);
       }
     };
@@ -190,11 +174,7 @@ const Home = () => {
 
     const content = messageText.trim();
 
-    if (
-      !content ||
-      !perticipentdata?.convId ||
-      isSending
-    ) {
+    if (!content || !perticipentdata?.convId || isSending) {
       return;
     }
 
@@ -234,13 +214,9 @@ const Home = () => {
       // Update conversation list
       // --------------------------------
 
-      if (
-        response?.data?.conversation ||
-        conversationId
-      ) {
+      if (response?.data?.conversation || conversationId) {
         const conversationIdFromResponse =
-          response?.data?.conversation ||
-          conversationId;
+          response?.data?.conversation || conversationId;
 
         import("../store").then(({ store }) => {
           import("../lib/api").then(({ apiSlice }) => {
@@ -249,52 +225,37 @@ const Home = () => {
                 "getConversation",
                 undefined,
                 (cache) => {
-                  if (
-                    !cache?.data ||
-                    !Array.isArray(cache.data)
-                  ) {
+                  if (!cache?.data || !Array.isArray(cache.data)) {
                     return;
                   }
 
-                  const targetIndex =
-                    cache.data.findIndex(
-                      (item) =>
-                        String(item._id) ===
-                        String(
-                          conversationIdFromResponse
-                        )
-                    );
+                  const targetIndex = cache.data.findIndex(
+                    (item) =>
+                      String(item._id) === String(conversationIdFromResponse),
+                  );
 
                   if (targetIndex === -1) return;
 
                   cache.data[targetIndex] = {
                     ...cache.data[targetIndex],
                     lastmessage: content,
-                    updatedAt:
-                      new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
                   };
 
                   // Latest conversation first
                   cache.data.sort(
                     (a, b) =>
-                      new Date(
-                        b.updatedAt || 0
-                      ).getTime() -
-                      new Date(
-                        a.updatedAt || 0
-                      ).getTime()
+                      new Date(b.updatedAt || 0).getTime() -
+                      new Date(a.updatedAt || 0).getTime(),
                   );
-                }
-              )
+                },
+              ),
             );
           });
         });
       }
     } catch (sendError) {
-      toast.error(
-        sendError?.data?.message ||
-          "Message could not be sent"
-      );
+      toast.error(sendError?.data?.message || "Message could not be sent");
     }
   };
 
@@ -365,8 +326,8 @@ const Home = () => {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-text-secondary">
-            Select a conversation from the sidebar to pick
-            up where you left off.
+            Select a conversation from the sidebar to pick up where you left
+            off.
           </p>
         </div>
       </div>
@@ -378,7 +339,7 @@ const Home = () => {
   // --------------------------------
 
   return (
-    <section className="ambient-canvas relative flex h-screen w-full flex-col overflow-hidden bg-bg">
+    <section className="ambient-canvas relative flex h-screen max-lg:h-dvh w-full flex-col overflow-hidden bg-bg">
       <div className="ambient-grid pointer-events-none absolute inset-0" />
 
       <div className="pointer-events-none absolute right-[12%] top-24 h-32 w-32 rounded-full border border-accent/10 float-slow" />
@@ -389,12 +350,10 @@ const Home = () => {
           Header
       -------------------------------- */}
 
-      <div className="chat-enter relative flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-6 py-4 backdrop-blur-sm">
+      <div className="chat-enter relative flex shrink-0 items-center justify-between border-b border-border bg-surface/95 px-6 py-4 max-lg:px-3 max-lg:py-3 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
-            {perticipentdata.fullname
-              ?.charAt(0)
-              ?.toUpperCase() || "U"}
+            {perticipentdata.fullname?.charAt(0)?.toUpperCase() || "U"}
           </div>
 
           <div className="min-w-0">
@@ -423,28 +382,22 @@ const Home = () => {
 
       <div
         ref={chatDisplayRef}
-        className="relative flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10"
+        className="relative flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto px-6 py-6 sm:px-10 max-lg:px-3 max-lg:py-4"
         id="chatDisplay"
       >
         {isLoading && (
-          <p className="m-auto text-sm text-text-muted">
-            Loading messages...
-          </p>
+          <p className="m-auto text-sm text-text-muted">Loading messages...</p>
         )}
 
         {error && (
-          <p className="m-auto text-sm text-error">
-            Could not load messages.
-          </p>
+          <p className="m-auto text-sm text-error">Could not load messages.</p>
         )}
 
-        {!isLoading &&
-          !error &&
-          !data?.data?.length && (
-            <p className="m-auto text-sm text-text-muted">
-              No messages yet. Say hello.
-            </p>
-          )}
+        {!isLoading && !error && !data?.data?.length && (
+          <p className="m-auto text-sm text-text-muted">
+            No messages yet. Say hello.
+          </p>
+        )}
 
         {/* --------------------------------
             Existing Messages
@@ -453,24 +406,21 @@ const Home = () => {
         {!isLoading &&
           !error &&
           data?.data?.map((items) => {
-            const senderId =
-              items?.sender?._id || items?.sender;
+            const senderId = items?.sender?._id || items?.sender;
 
-            const isOwnMessage =
-              String(senderId) ===
-              String(currentUserId);
+            const isOwnMessage = String(senderId) === String(currentUserId);
 
             return isOwnMessage ? (
               <div
                 key={items._id || items.content}
-                className="message-enter chat-message max-w-[min(75%,28rem)] self-start rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [animation-delay:120ms]"
+                className="message-enter chat-message max-w-[min(75%,28rem)] self-start break-words rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-2.5 text-sm leading-6 text-text-primary [overflow-wrap:anywhere] [animation-delay:120ms]"
               >
                 {items.content}
               </div>
             ) : (
               <div
                 key={items._id || items.content}
-                className="message-enter chat-message max-w-[min(75%,28rem)] self-end rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10"
+                className="message-enter chat-message max-w-[min(75%,28rem)] self-end break-words rounded-2xl rounded-br-md bg-chat-sent px-4 py-2.5 text-sm leading-6 text-white shadow-lg shadow-chat-sent/10 [overflow-wrap:anywhere]"
               >
                 {items.content}
               </div>
@@ -486,10 +436,7 @@ const Home = () => {
             className="message-enter flex max-w-[min(75%,28rem)] self-start items-center rounded-2xl rounded-bl-md border border-border bg-chat-received px-4 py-3"
             aria-live="polite"
           >
-            <span
-              className="typing-indicator"
-              aria-label="Typing indicator"
-            >
+            <span className="typing-indicator" aria-label="Typing indicator">
               <span className="typing-dot" />
               <span className="typing-dot" />
               <span className="typing-dot" />
@@ -504,7 +451,7 @@ const Home = () => {
 
       <form
         onSubmit={submitMessage}
-        className="relative shrink-0 border-t border-border bg-surface/95 px-4 py-4 backdrop-blur-sm sm:px-6"
+        className="relative shrink-0 border-t border-border bg-surface/95 px-4 py-4 max-lg:px-2 max-lg:py-3 backdrop-blur-sm sm:px-6"
       >
         <div className="flex items-center gap-2 rounded-xl border border-border bg-muted p-1.5 focus-within:border-brand/70">
           <button
@@ -532,10 +479,7 @@ const Home = () => {
 
           <button
             type="submit"
-            disabled={
-              isSending ||
-              !messageText.trim()
-            }
+            disabled={isSending || !messageText.trim()}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white transition hover:bg-brand-light disabled:cursor-not-allowed disabled:opacity-50"
             id="sendButton"
             aria-label="Send message"

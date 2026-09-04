@@ -77,7 +77,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="ambient-canvas relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-bg px-5 py-10">
+    <div className="ambient-canvas relative flex min-h-screen max-lg:min-h-dvh w-full items-center justify-center overflow-hidden bg-bg px-5 py-10">
       <div className="ambient-grid pointer-events-none absolute inset-0" />
       <svg
         className="pointer-events-none absolute -right-24 bottom-8 h-80 w-80 text-accent/20 float-delayed"

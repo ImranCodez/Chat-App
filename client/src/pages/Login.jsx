@@ -38,7 +38,7 @@ const Login = () => {
 
     try {
       const res = await loginuser(longindata).unwrap();
-  console.log(res)
+      console.log(res);
       toast.success("Login successful!", {
         autoClose: 3000,
       });
@@ -58,7 +58,7 @@ const Login = () => {
   };
 
   return (
-    <div className="ambient-canvas relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-bg px-5 py-10">
+    <div className="ambient-canvas relative flex min-h-screen max-lg:min-h-dvh w-full items-center justify-center overflow-hidden bg-bg px-5 py-10">
       <div className="ambient-grid pointer-events-none absolute inset-0" />
       <svg
         className="pointer-events-none absolute -left-20 top-16 h-64 w-64 text-accent/20 float-slow"
